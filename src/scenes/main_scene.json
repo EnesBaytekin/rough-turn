@@ -28,6 +28,9 @@
                 {
                     "file": "scripts/Camera",
                     "args": [0.1]
+                },
+                {
+                    "file": "scripts/LaunchParticles"
                 }
             ]
         }

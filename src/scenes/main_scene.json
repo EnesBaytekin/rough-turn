@@ -20,6 +20,10 @@
                 },
                 {
                     "file": "scripts/DrawAim"
+                },
+                {
+                    "file": "scripts/Camera",
+                    "args": [0.1]
                 }
             ]
         }

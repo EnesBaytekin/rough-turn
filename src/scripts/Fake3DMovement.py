@@ -14,28 +14,31 @@ class Fake3DMovement:
         self.z = 0
         self.moving = False
 
+    def _get_cam(self, obj):
+        cam_comps = obj.get_components("scripts/Camera")
+        return cam_comps[0] if cam_comps else None
+
     def update(self, obj):
         inp = InputManager()
         dt = App().dt
 
         if self.moving:
-            # Apply friction to scalar speed
             self.speed = max(0, self.speed - self.friction * dt)
-
-            # Move in fixed direction
             obj.x += self.dir_x * self.speed * dt
             obj.y += self.dir_y * self.speed * dt
-
-            # Check if stopped
             if self.speed == 0:
                 self.moving = False
         else:
-            # Mouse click to launch
             if inp.is_mouse_just_pressed(1):
                 mx = inp.get_mouse_x()
                 my = inp.get_mouse_y()
-                dx = obj.x - mx
-                dy = obj.y - my
+
+                # Screen → world for direction calc
+                cam = self._get_cam(obj)
+                wx, wy = cam.screen_to_world(mx, my) if cam else (mx, my)
+
+                dx = obj.x - wx
+                dy = obj.y - wy
                 dist = (dx * dx + dy * dy) ** 0.5
                 if dist > 0:
                     self.dir_x = dx / dist

@@ -16,7 +16,7 @@
                 },
                 {
                     "file": "scripts/Fake3DMovement",
-                    "args": [300, 300, 60, 60]
+                    "args": [300, 300, 60, 60, 600, 50, 250]
                 },
                 {
                     "file": "scripts/DrawCircle",

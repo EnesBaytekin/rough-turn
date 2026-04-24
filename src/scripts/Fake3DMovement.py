@@ -1,48 +1,54 @@
-import pygame
 from pygaminal.app import App
 from pygaminal.input_manager import InputManager
 
 
 class Fake3DMovement:
-    def __init__(self, speed=100, jump_force=180, gravity=-500):
-        self.speed = speed
-        self.jump_force = jump_force
-        self.gravity = gravity
-        self.velocity_z = 0
+    def __init__(self, launch_force=300, friction=150):
+        self.launch_force = launch_force
+        self.friction = friction
+        self.velocity_x = 0
+        self.velocity_y = 0
         self.z = 0
+        self.moving = False
 
     def update(self, obj):
-        app = App()
         inp = InputManager()
-        dt = app.dt
+        dt = App().dt
 
-        # Horizontal movement (WASD)
-        dx = 0
-        dy_world = 0
+        if self.moving:
+            # Apply friction to X
+            if self.velocity_x != 0:
+                if self.velocity_x > 0:
+                    self.velocity_x = max(0, self.velocity_x - self.friction * dt)
+                else:
+                    self.velocity_x = min(0, self.velocity_x + self.friction * dt)
 
-        if inp.is_pressed(pygame.K_a):
-            dx -= self.speed * dt
-        if inp.is_pressed(pygame.K_d):
-            dx += self.speed * dt
-        if inp.is_pressed(pygame.K_w):
-            dy_world -= self.speed * dt
-        if inp.is_pressed(pygame.K_s):
-            dy_world += self.speed * dt
+            # Apply friction to Y
+            if self.velocity_y != 0:
+                if self.velocity_y > 0:
+                    self.velocity_y = max(0, self.velocity_y - self.friction * dt)
+                else:
+                    self.velocity_y = min(0, self.velocity_y + self.friction * dt)
 
-        # Jump
-        if inp.is_pressed(pygame.K_SPACE) and self.z == 0:
-            self.velocity_z = self.jump_force
+            # Apply movement
+            obj.x += self.velocity_x * dt
+            obj.y += self.velocity_y * dt
 
-        # Gravity
-        self.velocity_z += self.gravity * dt
-        self.z += self.velocity_z * dt
-        if self.z < 0:
-            self.z = 0
-            self.velocity_z = 0
-
-        # Apply to world coordinates
-        obj.x += dx
-        obj.y += dy_world
+            # Check if fully stopped
+            if self.velocity_x == 0 and self.velocity_y == 0:
+                self.moving = False
+        else:
+            # Mouse click to launch toward aim direction
+            if inp.is_mouse_just_pressed(1):
+                mx = inp.get_mouse_x()
+                my = inp.get_mouse_y()
+                dx = obj.x - mx
+                dy = obj.y - my
+                dist = (dx * dx + dy * dy) ** 0.5
+                if dist > 0:
+                    self.velocity_x = (dx / dist) * self.launch_force
+                    self.velocity_y = (dy / dist) * self.launch_force
+                    self.moving = True
 
     def draw(self, obj):
         pass

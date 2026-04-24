@@ -7,6 +7,8 @@ from math import cos, sin, radians
 class DrawAim:
     def __init__(self, max_line_len=60):
         self.max_line_len = max_line_len
+        self._dot_surf = None
+        self._line_surf = None
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -44,14 +46,16 @@ class DrawAim:
         # --- Cursor dot ---
         behind = world_my < obj.y
         if behind:
-            pygame.draw.circle(surface, (200, 200, 200), (int(mx), int(my)), 4, 1)
+            # Soft muted circle outline
+            pygame.draw.circle(surface, (165, 160, 150), (int(mx), int(my)), 4, 1)
         else:
-            pygame.draw.circle(surface, (255, 255, 255), (int(mx), int(my)), 3)
+            # Warm white dot
+            pygame.draw.circle(surface, (245, 240, 228), (int(mx), int(my)), 3)
 
-        # --- Horizontal direction (white dashed) ---
+        # --- Horizontal direction (warm cream dashed) ---
         line_len = min(dist, self.max_line_len)
-        dash_len = 5
-        gap_len = 3
+        dash_len = 6
+        gap_len = 4
         step = dash_len + gap_len
         pos = 0
         while pos < line_len:
@@ -60,21 +64,25 @@ class DrawAim:
             y1 = int(by + ny * pos)
             x2 = int(bx + nx * end)
             y2 = int(by + ny * end)
-            pygame.draw.line(surface, (255, 255, 255), (x1, y1), (x2, y2), 1)
+            pygame.draw.line(surface, (225, 218, 200), (x1, y1), (x2, y2), 1)
             pos += step
 
-        # --- 3D vector line (cyan) — same base length as horizontal ---
+        # --- 3D vector line (warm amber, semi-transparent) — same base length ---
         a = radians(mov.angle)
         edx = nx * cos(a) * line_len
         edy = (ny * cos(a) - sin(a)) * line_len
         elen = (edx * edx + edy * edy) ** 0.5
         if elen < 0.5:
             edx, edy = 0, -line_len
+
+        # Draw with alpha via temp surface
         ex1 = int(bx)
         ey1 = int(by - mov.z)
         ex2 = int(bx + edx)
         ey2 = int(by - mov.z + edy)
-        pygame.draw.line(surface, (100, 220, 255), (ex1, ey1), (ex2, ey2), 2)
+        lsurf = pygame.Surface((Screen().width, Screen().height), pygame.SRCALPHA)
+        pygame.draw.line(lsurf, (210, 170, 130, 180), (ex1, ey1), (ex2, ey2), 2)
+        surface.blit(lsurf, (0, 0))
 
     def update(self, obj):
         pass

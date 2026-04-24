@@ -6,8 +6,9 @@ class Fake3DMovement:
     def __init__(self, launch_force=300, friction=150):
         self.launch_force = launch_force
         self.friction = friction
-        self.velocity_x = 0
-        self.velocity_y = 0
+        self.speed = 0
+        self.dir_x = 0
+        self.dir_y = 0
         self.z = 0
         self.moving = False
 
@@ -16,29 +17,18 @@ class Fake3DMovement:
         dt = App().dt
 
         if self.moving:
-            # Apply friction to X
-            if self.velocity_x != 0:
-                if self.velocity_x > 0:
-                    self.velocity_x = max(0, self.velocity_x - self.friction * dt)
-                else:
-                    self.velocity_x = min(0, self.velocity_x + self.friction * dt)
+            # Apply friction to scalar speed
+            self.speed = max(0, self.speed - self.friction * dt)
 
-            # Apply friction to Y
-            if self.velocity_y != 0:
-                if self.velocity_y > 0:
-                    self.velocity_y = max(0, self.velocity_y - self.friction * dt)
-                else:
-                    self.velocity_y = min(0, self.velocity_y + self.friction * dt)
+            # Move in fixed direction
+            obj.x += self.dir_x * self.speed * dt
+            obj.y += self.dir_y * self.speed * dt
 
-            # Apply movement
-            obj.x += self.velocity_x * dt
-            obj.y += self.velocity_y * dt
-
-            # Check if fully stopped
-            if self.velocity_x == 0 and self.velocity_y == 0:
+            # Check if stopped
+            if self.speed == 0:
                 self.moving = False
         else:
-            # Mouse click to launch toward aim direction
+            # Mouse click to launch
             if inp.is_mouse_just_pressed(1):
                 mx = inp.get_mouse_x()
                 my = inp.get_mouse_y()
@@ -46,8 +36,9 @@ class Fake3DMovement:
                 dy = obj.y - my
                 dist = (dx * dx + dy * dy) ** 0.5
                 if dist > 0:
-                    self.velocity_x = (dx / dist) * self.launch_force
-                    self.velocity_y = (dy / dist) * self.launch_force
+                    self.dir_x = dx / dist
+                    self.dir_y = dy / dist
+                    self.speed = self.launch_force
                     self.moving = True
 
     def draw(self, obj):

@@ -12,7 +12,7 @@
             "components": [
                 {
                     "file": "scripts/Fake3DMovement",
-                    "args": [300, 150]
+                    "args": [150, 150]
                 },
                 {
                     "file": "scripts/DrawCircle",

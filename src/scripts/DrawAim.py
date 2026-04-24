@@ -42,11 +42,10 @@ class DrawAim:
         bx, by = cam.world_to_screen(obj.x, obj.y) if cam else (obj.x, obj.y)
 
         # --- Cursor dot ---
-        behind = world_my < obj.y
-        if behind:
-            pygame.draw.circle(surface, (165, 160, 150), (int(mx), int(my)), 4, 1)
-        else:
+        if inp.is_mouse_pressed(1):
             pygame.draw.circle(surface, (245, 240, 228), (int(mx), int(my)), 3)
+        else:
+            pygame.draw.circle(surface, (200, 195, 185), (int(mx), int(my)), 4, 1)
 
         # Shared base length
         line_len = min(dist, self.max_line_len)

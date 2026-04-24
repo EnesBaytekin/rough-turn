@@ -48,7 +48,7 @@ class Fake3DMovement:
             if inp.is_mouse_just_pressed(5):
                 self.angle = max(0, self.angle - 5)
 
-            if inp.is_mouse_just_pressed(1):
+            if inp.is_mouse_released(1):
                 mx = inp.get_mouse_x()
                 my = inp.get_mouse_y()
                 cam = self._get_cam(obj)

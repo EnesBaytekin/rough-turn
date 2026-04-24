@@ -1,0 +1,24 @@
+{
+    "width": 320,
+    "height": 180,
+    "background_color": "#668792",
+    "objects": [
+        {
+            "name": "rock",
+            "x": 160,
+            "y": 90,
+            "depth": 0,
+            "tags": ["rock"],
+            "components": [
+                {
+                    "file": "scripts/Fake3DMovement",
+                    "args": [100, 180, -500]
+                },
+                {
+                    "file": "scripts/DrawCircle",
+                    "args": ["#545454", 12, true]
+                }
+            ]
+        }
+    ]
+}

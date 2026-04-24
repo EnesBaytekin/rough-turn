@@ -1,0 +1,11 @@
+{
+    "name": "rock",
+    "tags": ["rock"],
+    "depth": 0,
+    "components": [
+        {
+            "file": "scripts/DrawCircle",
+            "args": ["#8B7355", 16]
+        }
+    ]
+}

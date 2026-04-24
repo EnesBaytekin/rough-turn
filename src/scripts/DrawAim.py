@@ -22,6 +22,11 @@ class DrawAim:
             return
 
         inp = InputManager()
+
+        # Only show aim lines while holding left-click and not cancelled
+        if not inp.is_mouse_pressed(1) or mov._aim_cancelled:
+            return
+
         surface = Screen().surface
         cam = self._get_cam(obj)
 
@@ -42,10 +47,7 @@ class DrawAim:
         bx, by = cam.world_to_screen(obj.x, obj.y) if cam else (obj.x, obj.y)
 
         # --- Cursor dot ---
-        if inp.is_mouse_pressed(1):
-            pygame.draw.circle(surface, (245, 240, 228), (int(mx), int(my)), 3)
-        else:
-            pygame.draw.circle(surface, (200, 195, 185), (int(mx), int(my)), 4, 1)
+        pygame.draw.circle(surface, (245, 240, 228), (int(mx), int(my)), 3)
 
         # Shared base length
         line_len = min(dist, self.max_line_len)

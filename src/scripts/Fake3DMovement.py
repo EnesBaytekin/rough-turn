@@ -19,6 +19,7 @@ class Fake3DMovement:
         self.z = 0
         self.angle = 45
         self.moving = False
+        self._aim_cancelled = False
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -47,6 +48,15 @@ class Fake3DMovement:
                 self.angle = min(90, self.angle + 5)
             if inp.is_mouse_just_pressed(5):
                 self.angle = max(0, self.angle - 5)
+
+            # Right-click cancels aim while holding left-click
+            if inp.is_mouse_just_pressed(3):
+                self._aim_cancelled = True
+
+            if self._aim_cancelled:
+                if inp.is_mouse_released(1):
+                    self._aim_cancelled = False
+                return
 
             if inp.is_mouse_released(1):
                 mx = inp.get_mouse_x()

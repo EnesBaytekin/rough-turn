@@ -7,8 +7,6 @@ from math import cos, sin, radians
 class DrawAim:
     def __init__(self, max_line_len=60):
         self.max_line_len = max_line_len
-        self._dot_surf = None
-        self._line_surf = None
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -46,40 +44,49 @@ class DrawAim:
         # --- Cursor dot ---
         behind = world_my < obj.y
         if behind:
-            # Soft muted circle outline
             pygame.draw.circle(surface, (165, 160, 150), (int(mx), int(my)), 4, 1)
         else:
-            # Warm white dot
             pygame.draw.circle(surface, (245, 240, 228), (int(mx), int(my)), 3)
 
-        # --- Horizontal direction (warm cream dashed) ---
+        # Shared base length
         line_len = min(dist, self.max_line_len)
-        dash_len = 6
-        gap_len = 4
-        step = dash_len + gap_len
-        pos = 0
-        while pos < line_len:
-            end = min(pos + dash_len, line_len)
-            x1 = int(bx + nx * pos)
-            y1 = int(by + ny * pos)
-            x2 = int(bx + nx * end)
-            y2 = int(by + ny * end)
-            pygame.draw.line(surface, (225, 218, 200), (x1, y1), (x2, y2), 1)
-            pos += step
-
-        # --- 3D vector line (warm amber, semi-transparent) — same base length ---
         a = radians(mov.angle)
-        edx = nx * cos(a) * line_len
-        edy = (ny * cos(a) - sin(a)) * line_len
-        elen = (edx * edx + edy * edy) ** 0.5
-        if elen < 0.5:
-            edx, edy = 0, -line_len
+        h_len = line_len * cos(a)
+        v_len = line_len * sin(a)
 
-        # Draw with alpha via temp surface
+        # --- Horizontal leg (warm cream dashed) ---
+        if h_len > 0.5:
+            dash_len = 6
+            gap_len = 4
+            step = dash_len + gap_len
+            pos = 0
+            while pos < h_len:
+                end = min(pos + dash_len, h_len)
+                x1 = int(bx + nx * pos)
+                y1 = int(by + ny * pos)
+                x2 = int(bx + nx * end)
+                y2 = int(by + ny * end)
+                pygame.draw.line(surface, (225, 218, 200), (x1, y1), (x2, y2), 1)
+                pos += step
+
+        # --- Vertical leg (straight up from horizontal endpoint, warm rose) ---
+        hx = bx + nx * h_len
+        hy = by + ny * h_len
+        if v_len > 0.5:
+            vx1 = int(hx)
+            vy1 = int(hy)
+            vx2 = int(hx)
+            vy2 = int(hy - v_len)
+            pygame.draw.line(surface, (200, 175, 165), (vx1, vy1), (vx2, vy2), 1)
+
+        # --- Diagonal (warm amber, semi-transparent) — from ball to combined endpoint ---
         ex1 = int(bx)
         ey1 = int(by - mov.z)
-        ex2 = int(bx + edx)
-        ey2 = int(by - mov.z + edy)
+        ex2 = int(hx)
+        ey2 = int(hy - v_len)
+        # Fallback if both legs are zero-length: straight up
+        if abs(hx - bx) < 0.5 and abs(hy - by - v_len) < 0.5:
+            ex2, ey2 = int(bx), int(by - line_len)
         lsurf = pygame.Surface((Screen().width, Screen().height), pygame.SRCALPHA)
         pygame.draw.line(lsurf, (210, 170, 130, 180), (ex1, ey1), (ex2, ey2), 2)
         surface.blit(lsurf, (0, 0))

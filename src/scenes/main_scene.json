@@ -11,6 +11,10 @@
             "tags": ["rock"],
             "components": [
                 {
+                    "file": "scripts/DrawBackground",
+                    "args": [32]
+                },
+                {
                     "file": "scripts/Fake3DMovement",
                     "args": [300, 300, 60, 60]
                 },

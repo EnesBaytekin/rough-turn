@@ -23,6 +23,10 @@ class Fake3DMovement:
         self.angle = 45
         self.moving = False
         self._aim_cancelled = False
+        self._aim_start_sx = None
+        self._aim_start_sy = None
+        self._aim_start_wx = None
+        self._aim_start_wy = None
         self._ball_radius = 12
         # Collision debris particles
         self._collision_particles = []
@@ -100,9 +104,21 @@ class Fake3DMovement:
             if inp.is_mouse_just_pressed(5):
                 self.angle = max(0, self.angle - 5)
 
+            # Left click: record aim start point
+            if inp.is_mouse_just_pressed(1):
+                self._aim_cancelled = False
+                self._aim_start_sx = inp.get_mouse_x()
+                self._aim_start_sy = inp.get_mouse_y()
+                cam = self._get_cam(obj)
+                self._aim_start_wx, self._aim_start_wy = (
+                    cam.screen_to_world(self._aim_start_sx, self._aim_start_sy)
+                    if cam else (self._aim_start_sx, self._aim_start_sy)
+                )
+
             # Right-click cancels aim while holding left-click
-            if inp.is_mouse_just_pressed(3):
+            if inp.is_mouse_just_pressed(3) and inp.is_mouse_pressed(1):
                 self._aim_cancelled = True
+                self._aim_start_sx = None
 
             if self._aim_cancelled:
                 if inp.is_mouse_released(1):
@@ -110,24 +126,27 @@ class Fake3DMovement:
                 return
 
             if inp.is_mouse_released(1):
-                mx = inp.get_mouse_x()
-                my = inp.get_mouse_y()
-                cam = self._get_cam(obj)
-                wx, wy = cam.screen_to_world(mx, my) if cam else (mx, my)
+                if self._aim_start_sx is not None:
+                    mx = inp.get_mouse_x()
+                    my = inp.get_mouse_y()
+                    cam = self._get_cam(obj)
+                    wx, wy = cam.screen_to_world(mx, my) if cam else (mx, my)
 
-                dx = obj.x - wx
-                dy = obj.y - wy
-                dist = (dx * dx + dy * dy) ** 0.5
-                if dist > 0:
-                    self.dir_x = dx / dist
-                    self.dir_y = dy / dist
-                    capped = min(dist, self.max_aim_dist)
-                    total = max(self.min_launch_speed, (capped / self.max_aim_dist) * self.max_launch_speed)
-                    a = radians(self.angle)
-                    self.h_speed = total * cos(a)
-                    self.v_speed = self.vertical_force * sin(a)
-                    self.z = 0
-                    self.moving = True
+                    dx = self._aim_start_wx - wx
+                    dy = self._aim_start_wy - wy
+                    dist = (dx * dx + dy * dy) ** 0.5
+                    if dist > 0:
+                        self.dir_x = dx / dist
+                        self.dir_y = dy / dist
+                        capped = min(dist, self.max_aim_dist)
+                        total = max(self.min_launch_speed, (capped / self.max_aim_dist) * self.max_launch_speed)
+                        a = radians(self.angle)
+                        self.h_speed = total * cos(a)
+                        self.v_speed = self.vertical_force * sin(a)
+                        self.z = 0
+                        self.moving = True
+
+                self._aim_start_sx = None
 
         self._compute_depth(obj)
 

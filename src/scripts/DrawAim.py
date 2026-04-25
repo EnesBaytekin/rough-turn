@@ -42,15 +42,19 @@ class DrawAim:
         my = inp.get_mouse_y()
 
         # --- Cursor: hollow when idle, filled when aiming ---
-        if not inp.is_mouse_pressed(1) or mov._aim_cancelled:
+        if not inp.is_mouse_pressed(1) or mov._aim_cancelled or mov._aim_start_sx is None:
             pygame.draw.circle(overlay, (245, 240, 228), (mx, my), 4, 1)
             return
         else:
             pygame.draw.circle(overlay, (245, 240, 228), (mx, my), 3)
 
+        # --- White marker at aim start point ---
+        pygame.draw.circle(overlay, (255, 255, 255), (int(mov._aim_start_sx), int(mov._aim_start_sy)), 2)
+
+        # Direction: from current mouse toward aim start
         world_mx, world_my = cam.screen_to_world(mx, my) if cam else (mx, my)
-        dx = obj.x - world_mx
-        dy = obj.y - world_my
+        dx = mov._aim_start_wx - world_mx
+        dy = mov._aim_start_wy - world_my
         dist = (dx * dx + dy * dy) ** 0.5
 
         if dist < 3:

@@ -1,5 +1,6 @@
 import pygame
 from pygaminal.screen import Screen
+from pygaminal.app import App
 from math import cos, sin, radians
 
 
@@ -12,8 +13,12 @@ class Wall:
         self.height = height
 
     def _get_cam(self, obj):
-        cam_comps = obj.get_components("scripts/Camera")
-        return cam_comps[0] if cam_comps else None
+        scene = App().get_current_scene()
+        for other in scene.get_all_objects():
+            cam_comps = other.get_components("scripts/Camera")
+            if cam_comps:
+                return cam_comps[0]
+        return None
 
     def _get_corners(self, sx, sy, z_off=0):
         a = radians(self.angle)

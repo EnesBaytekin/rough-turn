@@ -42,4 +42,4 @@ class DrawBackground:
             y += self.grid_size
 
     def update(self, obj):
-        pass
+        obj.depth = -9999

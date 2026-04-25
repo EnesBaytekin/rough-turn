@@ -51,6 +51,7 @@ class Fake3DMovement:
 
             self._check_wall_collisions(obj)
         else:
+
             if inp.is_mouse_just_pressed(4):
                 self.angle = min(90, self.angle + 5)
             if inp.is_mouse_just_pressed(5):
@@ -161,6 +162,8 @@ class Fake3DMovement:
                     self.h_speed = new_speed
 
         obj.x, obj.y = bx, by
+
+        obj.depth = obj.y
 
     def draw(self, obj):
         pass

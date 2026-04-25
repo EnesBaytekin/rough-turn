@@ -46,7 +46,8 @@ class Wall:
         b = max(0, self.color.b - 40)
         side_color = (r, g, b)
 
-        # Draw side faces (quads connecting bottom → top)
+        # Build side face quads with depth key (average Y, higher = further)
+        side_faces = []
         for i in range(4):
             j = (i + 1) % 4
             quad = [
@@ -55,11 +56,17 @@ class Wall:
                 (int(top[j][0]), int(top[j][1])),
                 (int(bottom[j][0]), int(bottom[j][1])),
             ]
+            avg_y = (bottom[i][1] + top[i][1] + top[j][1] + bottom[j][1]) / 4
+            side_faces.append((avg_y, quad))
+
+        # Sort by depth: further (higher Y) drawn first
+        side_faces.sort(key=lambda f: f[0])
+        for _, quad in side_faces:
             pygame.draw.polygon(surface, side_color, quad)
 
-        # Draw top face
+        # Draw top face last (closest to viewer)
         top_pts = [(int(x), int(y)) for x, y in top]
         pygame.draw.polygon(surface, self.color, top_pts)
 
     def update(self, obj):
-        pass
+        obj.depth = obj.y

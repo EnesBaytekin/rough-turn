@@ -9,7 +9,7 @@ class DrawRock:
     def __init__(self, color="#646464", radius=12, shadow=True,
                  num_vertices=12, roughness=0.4,
                  rotation_scale=0.02, tilt_sensitivity=0.003,
-                 shading_offset=3, highlight_scale=0.75):
+                 num_layers=14, layer_spread=7):
         self.color = pygame.Color(color)
         self.radius = radius
         self.shadow = shadow
@@ -17,8 +17,8 @@ class DrawRock:
         self.roughness = roughness
         self.rotation_scale = rotation_scale
         self.tilt_sensitivity = tilt_sensitivity
-        self.shading_offset = shading_offset
-        self.highlight_scale = highlight_scale
+        self.num_layers = num_layers
+        self.layer_spread = layer_spread
 
         # Pre-compute stable random offsets so shape is consistent across frames
         random.seed(42)
@@ -30,7 +30,7 @@ class DrawRock:
         # Accumulated visual rotation angle (radians)
         self._rotation_angle = 0.0
 
-        # Pre-compute derived colors for shading
+        # Pre-compute derived colors
         self._dark_color = pygame.Color(
             max(0, self.color.r - 50),
             max(0, self.color.g - 50),
@@ -106,24 +106,30 @@ class DrawRock:
             pygame.draw.ellipse(shadow_surf, (0, 0, 0, shadow_alpha), shadow_surf.get_rect())
             surface.blit(shadow_surf, (sx - sw, sy - sh))
 
-        # --- Transformed polygon vertices ---
-        bottom_y = sy - z  # rock sits on this y
+        # --- Sprite-stacked layers ---
+        bottom_y = sy - z
         verts = self._transform_vertices(self._rotation_angle, y_tilt)
-        poly_pts = [(int(sx + vx), int(bottom_y + vy)) for vx, vy in verts]
 
-        # --- Dark base (offset down-right) ---
-        do = self.shading_offset
-        dark_pts = [(int(sx + vx + do), int(bottom_y + vy + do)) for vx, vy in verts]
-        pygame.draw.polygon(surface, self._dark_color, dark_pts)
+        for i in range(self.num_layers):
+            t = i / (self.num_layers - 1)  # 0 → 1 (back → front)
 
-        # --- Main color ---
-        pygame.draw.polygon(surface, self.color, poly_pts)
+            # Color band: 3 distinct colors
+            if t < 0.3:
+                color = self._dark_color
+            elif t < 0.7:
+                color = self.color
+            else:
+                color = self._light_color
 
-        # --- Light highlight (offset up-left, scaled down) ---
-        lo = self.shading_offset + 2
-        hl_pts = [
-            (int(sx + vx * self.highlight_scale - lo),
-             int(bottom_y + vy * self.highlight_scale - lo))
-            for vx, vy in verts
-        ]
-        pygame.draw.polygon(surface, self._light_color, hl_pts)
+            # Width scale: narrow at edges, full in the middle (spherical volume)
+            t_center = abs(t - 0.5) * 2  # 0 at center, 1 at edges
+            wscale = 1.0 - t_center * 0.55  # 1.0 center, 0.45 edges
+
+            # Offset: bottom-right (back) to top-left (front)
+            off = int(self.layer_spread * (1 - t * 2))
+
+            pts = [
+                (int(sx + vx * wscale + off), int(bottom_y + vy * wscale + off))
+                for vx, vy in verts
+            ]
+            pygame.draw.polygon(surface, color, pts)

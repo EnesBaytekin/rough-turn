@@ -29,7 +29,7 @@
                 },
                 {
                     "file": "scripts/DrawRock",
-                    "args": ["#646464", 12, true, 12, 0.4, 0.02, 0.003, 3, 0.75]
+                    "args": ["#646464", 12, true, 12, 0.4, 0.02, 0.003, 14, 7]
                 },
                 {
                     "file": "scripts/DrawAim"

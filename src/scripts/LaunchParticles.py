@@ -6,7 +6,7 @@ from pygaminal.app import App
 
 
 class LaunchParticles:
-    def __init__(self, count=16, spread_speed=60, lifetime=0.3):
+    def __init__(self, count=24, spread_speed=80, lifetime=0.35):
         self.count = count
         self.spread_speed = spread_speed
         self.lifetime = lifetime
@@ -32,12 +32,16 @@ class LaunchParticles:
             colors = [(255, 240, 210), (240, 215, 190), (220, 195, 175), (200, 180, 160)]
             for _ in range(self.count):
                 angle = random.uniform(0, math.pi * 2)
-                speed = random.uniform(self.spread_speed * 0.4, self.spread_speed)
+                burst_r = random.uniform(1, 5)
+                px = mx + math.cos(angle) * burst_r
+                py = my + math.sin(angle) * burst_r
+                spread = random.uniform(self.spread_speed * 0.4, self.spread_speed)
+                scatter = random.uniform(-0.25, 0.25)
                 self.particles.append({
-                    "x": mx,
-                    "y": my,
-                    "vx": math.cos(angle) * speed,
-                    "vy": math.sin(angle) * speed,
+                    "x": px,
+                    "y": py,
+                    "vx": math.cos(angle + scatter) * spread,
+                    "vy": math.sin(angle + scatter) * spread,
                     "life": self.lifetime,
                     "color": random.choice(colors),
                 })

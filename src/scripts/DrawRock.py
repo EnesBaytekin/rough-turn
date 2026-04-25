@@ -179,13 +179,10 @@ class DrawRock:
 
         # Read movement state
         z = 0
-        y_tilt = 1.0
         mov_comps = obj.get_components("scripts/Fake3DMovement")
         if mov_comps:
             mov = mov_comps[0]
             z = mov.z
-            y_tilt = 1.0 + (mov.dir_y * mov.h_speed) * self.tilt_sensitivity
-            y_tilt = max(0.6, min(1.4, y_tilt))
 
         # --- Ground shadow ---
         if self.shadow:
@@ -199,7 +196,7 @@ class DrawRock:
 
         # --- Sprite-stacked layers with fixed per-triangle colors ---
         bottom_y = sy - z
-        verts = self._transform_vertices(self._rotation_angle, y_tilt)
+        verts = self._transform_vertices(self._rotation_angle, 1.0)
         nv = len(verts)
 
         for i in range(self.num_layers):

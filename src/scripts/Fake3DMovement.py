@@ -160,6 +160,9 @@ class Fake3DMovement:
             if vdotn < 0:
                 vx -= 2 * vdotn * nx
                 vy -= 2 * vdotn * ny
+                # Slightly inelastic: lose a little speed on bounce
+                vx *= 0.92
+                vy *= 0.92
                 new_speed = (vx * vx + vy * vy) ** 0.5
                 if new_speed > 0:
                     self.dir_x = vx / new_speed

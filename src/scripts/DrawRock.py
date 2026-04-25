@@ -8,7 +8,7 @@ from pygaminal.input_manager import InputManager
 
 class DrawRock:
     def __init__(self, color="#646464", radius=12, shadow=True,
-                 num_vertices=12, roughness=0.4,
+                 num_vertices=24, roughness=0.4,
                  rotation_scale=0.02, tilt_sensitivity=0.003,
                  num_layers=14, layer_spread=7):
         self.color = pygame.Color(color)
@@ -53,10 +53,13 @@ class DrawRock:
 
     def _generate_shape(self):
         """Build base polygon vertices centered at (0, 0)."""
+        # Remap: 0→0, 0.7→1.0 (cap at 1.0 so 0.7 is max messy)
+        self._effective_r = min(1.0, self.roughness / 0.7)
         verts = []
         for i in range(self.num_vertices):
             angle = (2 * math.pi * i) / self.num_vertices
-            pert = self._radial_offsets[i] * self.roughness * self.radius
+            # Reduce perturbation max so it's not overly messy
+            pert = self._radial_offsets[i] * self._effective_r * self.radius * 0.4
             r = max(1, self.radius + pert)
             verts.append((r * math.cos(angle), r * math.sin(angle)))
         return verts
@@ -84,12 +87,15 @@ class DrawRock:
         main_rgb = (self.color.r, self.color.g, self.color.b)
         dark_rgb = (self._dark_color.r, self._dark_color.g, self._dark_color.b)
 
+        # Smoother colors when shape is smoother
+        color_smooth = 0.5 + 0.5 * getattr(self, '_effective_r', 1.0)
+
         all_colors = []
         for i in range(self.num_layers):
             t = i / (self.num_layers - 1)
             t_center = abs(t - 0.5) * 2
             center_thresh = 1.0 - t * 2.0
-            gap = 0.8 * (1 - t_center)
+            gap = 0.8 * (1 - t_center) * color_smooth
             dark_thresh = center_thresh - gap
             light_thresh = center_thresh + gap
 
@@ -148,31 +154,16 @@ class DrawRock:
                 self._rotation_angle += ang_vel * dt
                 self._rotation_angle %= 2 * math.pi
 
-        # --- Temporary: roughness slider interaction ---
-        inp = InputManager()
-        mx, my = inp.get_mouse_x(), inp.get_mouse_y()
-        scr_h = Screen().height
-
-        slider_x = 10
-        slider_y = scr_h - 25
-        slider_w = 150
-
-        if inp.is_mouse_pressed(1):
-            if slider_y - 12 <= my <= slider_y + 12 and slider_x - 5 <= mx <= slider_x + slider_w + 5:
-                new_val = max(0.0, min(1.0, (mx - slider_x) / slider_w))
-                new_val = round(new_val * 100) / 100
-                if abs(new_val - self.roughness) > 0.005:
-                    self.roughness = new_val
-                    self._regenerate()
-
-        # Keyboard control: K and L keys adjust roughness
+        # Keyboard control: K and L keys adjust roughness (manual only)
         inp2 = InputManager()
         if inp2.is_just_pressed(pygame.K_k):
             self.roughness = max(0.0, self.roughness - 0.05)
             self._regenerate()
+            print(f"roughness: {self.roughness:.2f}")
         if inp2.is_just_pressed(pygame.K_l):
             self.roughness = min(1.0, self.roughness + 0.05)
             self._regenerate()
+            print(f"roughness: {self.roughness:.2f}")
 
         # Share current roughness with overlay
         import scripts.DrawRock as dr
@@ -218,8 +209,8 @@ class DrawRock:
             t_center = abs(t - 0.5) * 2
             wscale = 1.0 - t_center * 0.55
 
-            # Diagonal offset per layer
-            off = int(self.layer_spread * (1 - t * 2))
+            # Diagonal offset per layer — scales with roughness for perfect sphere at 0
+            off = int(self.layer_spread * (1 - t * 2) * getattr(self, '_effective_r', 1.0))
             cx = sx + off
             cy = bottom_y + off
 

@@ -184,19 +184,35 @@ class DrawRock:
             mov = mov_comps[0]
             z = mov.z
 
-        # --- Ground shadow ---
-        if self.shadow:
-            size_scale = max(0.3, 1 - (z / 100))
-            sw = max(2, int(self.radius * size_scale))
-            sh = max(1, int(self.radius * 0.4 * size_scale))
-            shadow_alpha = max(20, int(50 * size_scale))
-            shadow_surf = pygame.Surface((sw * 2, sh * 2), pygame.SRCALPHA)
-            pygame.draw.ellipse(shadow_surf, (0, 0, 0, shadow_alpha), shadow_surf.get_rect())
-            surface.blit(shadow_surf, (sx - sw, sy - sh))
-
         # --- Sprite-stacked layers with fixed per-triangle colors ---
         bottom_y = sy - z
         verts = self._transform_vertices(self._rotation_angle, 1.0)
+
+        # --- Ground shadow (matches rock shape, rotates with it) ---
+        if self.shadow:
+            size_scale = max(0.3, 1 - (z / 100))
+            squash = 0.4
+            shadow_alpha = max(20, int(50 * size_scale))
+
+            # Transform vertices to shadow shape (scaled + squashed vertically)
+            shadow_pts = []
+            for vx, vy in verts:
+                px = vx * size_scale
+                py = vy * size_scale * squash
+                shadow_pts.append((px, py))
+
+            # Bounding box for shadow surface
+            xs = [p[0] for p in shadow_pts]
+            ys = [p[1] for p in shadow_pts]
+            min_x, max_x = min(xs), max(xs)
+            min_y, max_y = min(ys), max(ys)
+            sw = int(max_x - min_x) + 2
+            sh = int(max_y - min_y) + 2
+
+            shadow_surf = pygame.Surface((sw, sh), pygame.SRCALPHA)
+            local_pts = [(int(p[0] - min_x), int(p[1] - min_y)) for p in shadow_pts]
+            pygame.draw.polygon(shadow_surf, (0, 0, 0, shadow_alpha), local_pts)
+            surface.blit(shadow_surf, (int(sx + min_x), int(sy + min_y)))
         nv = len(verts)
 
         for i in range(self.num_layers):

@@ -36,14 +36,14 @@ class DrawRock:
 
         # Pre-compute derived colors
         self._dark_color = pygame.Color(
-            max(0, self.color.r - 50),
-            max(0, self.color.g - 50),
-            max(0, self.color.b - 50)
+            max(0, self.color.r - 25),
+            max(0, self.color.g - 25),
+            max(0, self.color.b - 25)
         )
         self._light_color = pygame.Color(
-            min(255, self.color.r + 60),
-            min(255, self.color.g + 60),
-            min(255, self.color.b + 60)
+            min(255, self.color.r + 30),
+            min(255, self.color.g + 30),
+            min(255, self.color.b + 30)
         )
 
         # Pre-compute per-layer triangle colors from base (unrotated) geometry

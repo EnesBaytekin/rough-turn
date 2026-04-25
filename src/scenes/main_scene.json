@@ -4,16 +4,25 @@
     "background_color": "#668792",
     "objects": [
         {
+            "name": "bg",
+            "x": 0,
+            "y": 0,
+            "depth": -2,
+            "tags": [],
+            "components": [
+                {
+                    "file": "scripts/DrawBackground",
+                    "args": [32]
+                }
+            ]
+        },
+        {
             "name": "rock",
             "x": 160,
             "y": 90,
             "depth": 0,
             "tags": ["rock"],
             "components": [
-                {
-                    "file": "scripts/DrawBackground",
-                    "args": [32]
-                },
                 {
                     "file": "scripts/Fake3DMovement",
                     "args": [300, 300, 60, 60, 600, 50, 250]
@@ -31,6 +40,58 @@
                 },
                 {
                     "file": "scripts/LaunchParticles"
+                }
+            ]
+        },
+        {
+            "name": "wall_bottom",
+            "x": 160,
+            "y": 170,
+            "depth": -1,
+            "tags": ["wall"],
+            "components": [
+                {
+                    "file": "scripts/Wall",
+                    "args": [200, 10, 0, "#887a6e", 40]
+                }
+            ]
+        },
+        {
+            "name": "wall_left",
+            "x": 20,
+            "y": 90,
+            "depth": -1,
+            "tags": ["wall"],
+            "components": [
+                {
+                    "file": "scripts/Wall",
+                    "args": [140, 10, 90, "#887a6e", 50]
+                }
+            ]
+        },
+        {
+            "name": "wall_right",
+            "x": 300,
+            "y": 90,
+            "depth": -1,
+            "tags": ["wall"],
+            "components": [
+                {
+                    "file": "scripts/Wall",
+                    "args": [140, 10, 90, "#887a6e", 50]
+                }
+            ]
+        },
+        {
+            "name": "wall_angled",
+            "x": 200,
+            "y": 50,
+            "depth": -1,
+            "tags": ["wall"],
+            "components": [
+                {
+                    "file": "scripts/Wall",
+                    "args": [100, 10, -30, "#887a6e", 30]
                 }
             ]
         }

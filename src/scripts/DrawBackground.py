@@ -1,5 +1,6 @@
 import pygame
 from pygaminal.screen import Screen
+from pygaminal.app import App
 
 
 class DrawBackground:
@@ -7,8 +8,12 @@ class DrawBackground:
         self.grid_size = grid_size
 
     def _get_cam(self, obj):
-        cam_comps = obj.get_components("scripts/Camera")
-        return cam_comps[0] if cam_comps else None
+        scene = App().get_current_scene()
+        for other in scene.get_all_objects():
+            cam_comps = other.get_components("scripts/Camera")
+            if cam_comps:
+                return cam_comps[0]
+        return None
 
     def draw(self, obj):
         surface = Screen().surface

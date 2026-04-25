@@ -20,10 +20,15 @@ class Fake3DMovement:
         self.angle = 45
         self.moving = False
         self._aim_cancelled = False
+        self._ball_radius = 12
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
         return cam_comps[0] if cam_comps else None
+
+    def _get_ball_radius(self, obj):
+        dc = obj.get_components("scripts/DrawCircle")
+        return dc[0].radius if dc else self._ball_radius
 
     def update(self, obj):
         inp = InputManager()
@@ -43,6 +48,8 @@ class Fake3DMovement:
 
             if self.h_speed == 0 and self.z == 0:
                 self.moving = False
+
+            self._check_wall_collisions(obj)
         else:
             if inp.is_mouse_just_pressed(4):
                 self.angle = min(90, self.angle + 5)
@@ -77,6 +84,83 @@ class Fake3DMovement:
                     self.v_speed = self.vertical_force * sin(a)
                     self.z = 0
                     self.moving = True
+
+    def _check_wall_collisions(self, obj):
+        scene = App().get_current_scene()
+        wall_objs = scene.get_objects_by_tag("wall")
+        if not wall_objs:
+            return
+
+        r = self._get_ball_radius(obj)
+        bx, by = obj.x, obj.y
+
+        for wob in wall_objs:
+            wall_comps = wob.get_components("scripts/Wall")
+            if not wall_comps:
+                continue
+            wall = wall_comps[0]
+            ht = wall.thickness / 2
+
+            if self.z > wall.height:
+                continue
+
+            a = radians(wall.angle)
+            hw = wall.width / 2
+            ca, sa = cos(a), sin(a)
+
+            sx = wob.x - ca * hw
+            sy = wob.y - sa * hw
+            ex = wob.x + ca * hw
+            ey = wob.y + sa * hw
+
+            sdx = ex - sx
+            sdy = ey - sy
+            seg_len = (sdx * sdx + sdy * sdy) ** 0.5
+            if seg_len < 0.001:
+                continue
+
+            ux = sdx / seg_len
+            uy = sdy / seg_len
+
+            t = (bx - sx) * ux + (by - sy) * uy
+            t = max(0, min(seg_len, t))
+            px = sx + ux * t
+            py = sy + uy * t
+
+            dx = bx - px
+            dy = by - py
+            dist = (dx * dx + dy * dy) ** 0.5
+
+            min_dist = r + ht
+            if dist >= min_dist:
+                continue
+
+            if dist < 0.001:
+                nx = -sa
+                ny = ca
+                if nx * self.dir_x + ny * self.dir_y > 0:
+                    nx, ny = -nx, -ny
+            else:
+                nx = dx / dist
+                ny = dy / dist
+
+            pen = min_dist - dist
+            bx += nx * pen
+            by += ny * pen
+
+            vx = self.h_speed * self.dir_x
+            vy = self.h_speed * self.dir_y
+            vdotn = vx * nx + vy * ny
+            if vdotn < 0:
+                vx -= 2 * vdotn * nx
+                vy -= 2 * vdotn * ny
+                new_speed = (vx * vx + vy * vy) ** 0.5
+                if new_speed > 0:
+                    self.dir_x = vx / new_speed
+                    self.dir_y = vy / new_speed
+                    self.h_speed = new_speed
+
+        obj.x, obj.y = bx, by
 
     def draw(self, obj):
         pass

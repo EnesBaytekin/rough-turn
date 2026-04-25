@@ -41,15 +41,16 @@ class DrawAim:
         mx = inp.get_mouse_x()
         my = inp.get_mouse_y()
 
-        # --- Cursor: hollow when idle, filled when aiming ---
+        # --- Cursor: warm white, hollow when idle, filled when aiming ---
+        cursor_col = (217, 210, 197)
         if not inp.is_mouse_pressed(1) or mov._aim_cancelled or mov._aim_start_sx is None:
-            pygame.draw.circle(overlay, (245, 240, 228), (mx, my), 4, 1)
+            pygame.draw.circle(overlay, cursor_col, (mx, my), 4, 1)
             return
         else:
-            pygame.draw.circle(overlay, (245, 240, 228), (mx, my), 3)
+            pygame.draw.circle(overlay, cursor_col, (mx, my), 3)
 
         # --- White marker at aim start point ---
-        pygame.draw.circle(overlay, (255, 255, 255), (int(mov._aim_start_sx), int(mov._aim_start_sy)), 2)
+        pygame.draw.circle(overlay, cursor_col, (int(mov._aim_start_sx), int(mov._aim_start_sy)), 2)
 
         # Direction: from current mouse toward aim start
         world_mx, world_my = cam.screen_to_world(mx, my) if cam else (mx, my)
@@ -83,7 +84,7 @@ class DrawAim:
                 y1 = int(by + ny * pos)
                 x2 = int(bx + nx * end)
                 y2 = int(by + ny * end)
-                pygame.draw.line(overlay, (225, 218, 200), (x1, y1), (x2, y2), 1)
+                pygame.draw.line(overlay, (225, 218, 200, 160), (x1, y1), (x2, y2), 1)
                 pos += step
 
         # --- Vertical leg (straight up from horizontal endpoint, warm rose) ---
@@ -94,9 +95,9 @@ class DrawAim:
             vy1 = int(hy)
             vx2 = int(hx)
             vy2 = int(hy - v_len)
-            pygame.draw.line(overlay, (200, 175, 165), (vx1, vy1), (vx2, vy2), 1)
+            pygame.draw.line(overlay, (200, 175, 165, 160), (vx1, vy1), (vx2, vy2), 1)
 
-        # --- Diagonal (warm amber, semi-transparent) — from ball to combined endpoint ---
+        # --- Diagonal (warm amber) — from ball to combined endpoint ---
         ex1 = int(bx)
         ey1 = int(by - mov.z)
         ex2 = int(hx)
@@ -104,7 +105,7 @@ class DrawAim:
         # Fallback if both legs are zero-length: straight up
         if abs(hx - bx) < 0.5 and abs(hy - by - v_len) < 0.5:
             ex2, ey2 = int(bx), int(by - line_len)
-        pygame.draw.line(overlay, (210, 170, 130, 180), (ex1, ey1), (ex2, ey2), 2)
+        pygame.draw.line(overlay, (210, 170, 130, 140), (ex1, ey1), (ex2, ey2), 2)
 
     def update(self, obj):
         pass

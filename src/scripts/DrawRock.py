@@ -42,6 +42,10 @@ class DrawRock:
             min(255, self.color.b + 60)
         )
 
+        # Pre-compute per-layer triangle colors from base (unrotated) geometry
+        # so each triangle keeps its color no matter how the rock rotates.
+        self._triangle_colors = self._compute_triangle_colors()
+
     def _generate_shape(self):
         """Build base polygon vertices centered at (0, 0)."""
         verts = []
@@ -63,6 +67,49 @@ class DrawRock:
             ry *= y_tilt
             result.append((rx, ry))
         return result
+
+    def _compute_triangle_colors(self):
+        """Assign a fixed color to each triangle of each layer (unrotated)."""
+        light_angle = math.atan2(-1, -1)
+        lx = math.cos(light_angle)
+        ly = math.sin(light_angle)
+        nv = len(self._base_vertices)
+
+        light_rgb = (self._light_color.r, self._light_color.g, self._light_color.b)
+        main_rgb = (self.color.r, self.color.g, self.color.b)
+        dark_rgb = (self._dark_color.r, self._dark_color.g, self._dark_color.b)
+
+        all_colors = []
+        for i in range(self.num_layers):
+            t = i / (self.num_layers - 1)
+            t_center = abs(t - 0.5) * 2
+            center_thresh = 1.0 - t * 2.0
+            gap = 0.8 * (1 - t_center)
+            dark_thresh = center_thresh - gap
+            light_thresh = center_thresh + gap
+
+            layer_colors = []
+            for vi in range(nv):
+                vj = (vi + 1) % nv
+                v1x, v1y = self._base_vertices[vi]
+                v2x, v2y = self._base_vertices[vj]
+                mx = v1x + v2x
+                my = v1y + v2y
+                ml = math.sqrt(mx * mx + my * my)
+                if ml > 0:
+                    dot = (mx / ml) * lx + (my / ml) * ly
+                else:
+                    dot = 0
+
+                if dot > light_thresh:
+                    col = light_rgb
+                elif dot < dark_thresh:
+                    col = dark_rgb
+                else:
+                    col = main_rgb
+                layer_colors.append(col)
+            all_colors.append(layer_colors)
+        return all_colors
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -106,30 +153,34 @@ class DrawRock:
             pygame.draw.ellipse(shadow_surf, (0, 0, 0, shadow_alpha), shadow_surf.get_rect())
             surface.blit(shadow_surf, (sx - sw, sy - sh))
 
-        # --- Sprite-stacked layers ---
+        # --- Sprite-stacked layers with fixed per-triangle colors ---
         bottom_y = sy - z
         verts = self._transform_vertices(self._rotation_angle, y_tilt)
+        nv = len(verts)
 
         for i in range(self.num_layers):
-            t = i / (self.num_layers - 1)  # 0 → 1 (back → front)
+            t = i / (self.num_layers - 1)  # 0 (bottom) → 1 (top)
 
-            # Color band: 3 distinct colors
-            if t < 0.3:
-                color = self._dark_color
-            elif t < 0.7:
-                color = self.color
-            else:
-                color = self._light_color
+            # Width scale: spherical volume
+            t_center = abs(t - 0.5) * 2
+            wscale = 1.0 - t_center * 0.55
 
-            # Width scale: narrow at edges, full in the middle (spherical volume)
-            t_center = abs(t - 0.5) * 2  # 0 at center, 1 at edges
-            wscale = 1.0 - t_center * 0.55  # 1.0 center, 0.45 edges
-
-            # Offset: bottom-right (back) to top-left (front)
+            # Diagonal offset per layer
             off = int(self.layer_spread * (1 - t * 2))
+            cx = sx + off
+            cy = bottom_y + off
 
-            pts = [
-                (int(sx + vx * wscale + off), int(bottom_y + vy * wscale + off))
-                for vx, vy in verts
-            ]
-            pygame.draw.polygon(surface, color, pts)
+            layer_colors = self._triangle_colors[i]
+
+            # Triangle fan from center
+            for vi in range(nv):
+                vj = (vi + 1) % nv
+                v1x, v1y = verts[vi]
+                v2x, v2y = verts[vj]
+
+                tri = [
+                    (int(cx), int(cy)),
+                    (int(cx + v1x * wscale), int(cy + v1y * wscale)),
+                    (int(cx + v2x * wscale), int(cy + v2y * wscale)),
+                ]
+                pygame.draw.polygon(surface, layer_colors[vi], tri)

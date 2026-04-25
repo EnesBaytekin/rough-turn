@@ -29,7 +29,7 @@
                 },
                 {
                     "file": "scripts/DrawCircle",
-                    "args": ["#545454", 12, true]
+                    "args": ["#646464", 12, true]
                 },
                 {
                     "file": "scripts/DrawAim"
@@ -92,6 +92,18 @@
                 {
                     "file": "scripts/Wall",
                     "args": [100, 10, -30, "#887a6e", 30]
+                }
+            ]
+        },
+        {
+            "name": "overlay",
+            "x": 0,
+            "y": 0,
+            "depth": 9999,
+            "tags": [],
+            "components": [
+                {
+                    "file": "scripts/DrawOverlay"
                 }
             ]
         }

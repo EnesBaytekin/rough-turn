@@ -124,9 +124,9 @@ class DrawRock:
                 # X movement: primary rolling
                 ang_x = mov.dir_x * mov.h_speed * self.rotation_scale
                 # Y movement: secondary tumbling
-                ang_y = mov.dir_y * mov.h_speed * self.rotation_scale * 0.5
-                # Z movement: bounce/spin from vertical motion
-                ang_z = mov.v_speed * self.rotation_scale * 0.3
+                ang_y = mov.dir_y * mov.h_speed * self.rotation_scale * 0.8
+                # Z movement: constant rotation while in the air, independent of v_speed
+                ang_z = self.rotation_scale * 120 if mov.z > 0 else 0
                 ang_vel = ang_x + ang_y + ang_z
                 self._rotation_angle += ang_vel * dt
                 self._rotation_angle %= 2 * math.pi

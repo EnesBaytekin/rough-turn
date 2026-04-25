@@ -27,8 +27,11 @@ class Fake3DMovement:
         return cam_comps[0] if cam_comps else None
 
     def _get_ball_radius(self, obj):
-        dc = obj.get_components("scripts/DrawCircle")
-        return dc[0].radius if dc else self._ball_radius
+        for comp_type in ("scripts/DrawCircle", "scripts/DrawRock"):
+            comps = obj.get_components(comp_type)
+            if comps:
+                return comps[0].radius
+        return self._ball_radius
 
     def update(self, obj):
         inp = InputManager()

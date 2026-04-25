@@ -1,5 +1,8 @@
+import pygame
+import random
 from pygaminal.app import App
 from pygaminal.input_manager import InputManager
+from pygaminal.screen import Screen
 from math import cos, sin, radians
 
 
@@ -21,6 +24,9 @@ class Fake3DMovement:
         self.moving = False
         self._aim_cancelled = False
         self._ball_radius = 12
+        # Collision debris particles
+        self._collision_particles = []
+        self._collision_cooldown = 0.0
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -33,9 +39,43 @@ class Fake3DMovement:
                 return comps[0].radius
         return self._ball_radius
 
+    def _get_rock_colors(self, obj):
+        """Get DrawRock's 3 colors (dark, main, light) for particles."""
+        rock_comps = obj.get_components("scripts/DrawRock")
+        if rock_comps:
+            rock = rock_comps[0]
+            return [
+                (rock._dark_color.r, rock._dark_color.g, rock._dark_color.b),
+                (rock.color.r, rock.color.g, rock.color.b),
+                (rock._light_color.r, rock._light_color.g, rock._light_color.b),
+            ]
+        return [(160, 150, 140)]
+
+    def _spawn_collision_particles(self, obj, cx, cy, ball_r):
+        """Spawn small debris at collision point — only falls down."""
+        count = random.randint(4, 7)
+        colors = self._get_rock_colors(obj)
+        for _ in range(count):
+            size = random.choices([1, 2, 3], weights=[4, 3, 1])[0]
+            self._collision_particles.append({
+                "x": cx + random.uniform(-2, 2),
+                "y": cy + random.uniform(-2, 2),
+                "z": self.z + ball_r,
+                "vx": random.uniform(-25, 25),
+                "vy": random.uniform(-25, 25),
+                "vz": random.uniform(-40, -100),
+                "life": random.uniform(0.6, 1.2),
+                "size": size,
+                "color": random.choice(colors),
+            })
+
     def update(self, obj):
         inp = InputManager()
         dt = App().dt
+
+        # Update collision cooldown
+        if self._collision_cooldown > 0:
+            self._collision_cooldown -= dt
 
         if self.moving:
             drag = self.air_friction if self.z > 0 else self.friction
@@ -90,6 +130,9 @@ class Fake3DMovement:
                     self.moving = True
 
         self._compute_depth(obj)
+
+        # Update collision particles
+        self._update_particles(obj)
 
     def _check_wall_collisions(self, obj):
         scene = App().get_current_scene()
@@ -169,7 +212,51 @@ class Fake3DMovement:
                     self.dir_y = vy / new_speed
                     self.h_speed = new_speed
 
+                # --- Spawn particles & smooth rock ---
+                if self._collision_cooldown <= 0:
+                    # Surface contact point (wall surface, not center line)
+                    cx = px + nx * ht
+                    cy = py + ny * ht
+                    self._spawn_collision_particles(obj, cx, cy, r)
+                    self._collision_cooldown = 0.12
+
+                    # Gradually smooth the rock on each collision
+                    rock_comps = obj.get_components("scripts/DrawRock")
+                    if rock_comps:
+                        rock = rock_comps[0]
+                        if rock.roughness > 0:
+                            rock.roughness = max(0.0, rock.roughness - 0.015)
+                            rock._regenerate()
+
         obj.x, obj.y = bx, by
+
+    def _update_particles(self, obj):
+        dt = App().dt
+        for p in self._collision_particles:
+            p["x"] += p["vx"] * dt
+            p["y"] += p["vy"] * dt
+            p["z"] += p["vz"] * dt
+            p["vz"] -= self.gravity * dt
+            if p["z"] < 0:
+                p["z"] = 0
+                p["vx"] *= 0.9
+                p["vy"] *= 0.9
+            p["life"] -= dt
+        self._collision_particles = [p for p in self._collision_particles if p["life"] > 0]
+
+    def _draw_particles(self, obj):
+        if not self._collision_particles:
+            return
+        surface = Screen().surface
+        cam = self._get_cam(obj)
+        for p in self._collision_particles:
+            sx, sy = cam.world_to_screen(p["x"], p["y"]) if cam else (p["x"], p["y"])
+            sy -= p["z"]
+            r, g, b = p["color"]
+            size = p["size"]
+            psurf = pygame.Surface((size, size))
+            psurf.fill((r, g, b))
+            surface.blit(psurf, (int(sx - size // 2), int(sy - size // 2)))
 
     def _compute_depth(self, obj):
         scene = App().get_current_scene()
@@ -227,4 +314,4 @@ class Fake3DMovement:
         obj.depth = depth_val
 
     def draw(self, obj):
-        pass
+        self._draw_particles(obj)

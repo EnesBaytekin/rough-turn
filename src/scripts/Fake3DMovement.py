@@ -86,6 +86,8 @@ class Fake3DMovement:
                     self.z = 0
                     self.moving = True
 
+        self._compute_depth(obj)
+
     def _check_wall_collisions(self, obj):
         scene = App().get_current_scene()
         wall_objs = scene.get_objects_by_tag("wall")
@@ -163,7 +165,60 @@ class Fake3DMovement:
 
         obj.x, obj.y = bx, by
 
-        obj.depth = obj.y
+    def _compute_depth(self, obj):
+        scene = App().get_current_scene()
+        wall_objs = scene.get_objects_by_tag("wall")
+        if not wall_objs:
+            obj.depth = obj.y
+            return
+
+        bx, by = obj.x, obj.y
+        depth_val = by
+
+        for wob in wall_objs:
+            wall_comps = wob.get_components("scripts/Wall")
+            if not wall_comps:
+                continue
+            wall = wall_comps[0]
+
+            a = radians(wall.angle)
+            # Wall normal (perpendicular to length direction)
+            nx = -sin(a)
+            ny = cos(a)
+
+            ht = wall.thickness / 2
+            wcx, wcy = wob.x, wob.y
+
+            # The wall has two long sides, offset by ±thickness/2 along the normal.
+            # In 2.5D the side with higher Y is "closer to screen".
+            # Pick the near side's center and measure ball relative to it.
+            near_side_y = wcy + ny * ht
+            far_side_y = wcy - ny * ht
+
+            if abs(near_side_y - far_side_y) < 0.001:
+                # Vertical wall – both sides same Y, y-sort is fine
+                continue
+
+            # near normal points from wall center toward the near (high-Y) side
+            if ny > 0:
+                nfx, nfy = nx, ny
+            else:
+                nfx, nfy = -nx, -ny
+
+            near_cx = wcx + nfx * ht
+            near_cy = wcy + nfy * ht
+
+            # Signed distance from the near-side plane
+            ball_side = (bx - near_cx) * nfx + (by - near_cy) * nfy
+
+            if ball_side > 0:
+                # Ball is even closer to screen than the near side → in front
+                depth_val = max(depth_val, wcy + 1)
+            else:
+                # Ball is on the far side of the near plane → behind
+                depth_val = min(depth_val, wcy - 1)
+
+        obj.depth = depth_val
 
     def draw(self, obj):
         pass

@@ -121,7 +121,13 @@ class DrawRock:
             mov = mov_comps[0]
             if mov.moving:
                 dt = App().dt
-                ang_vel = mov.dir_x * mov.h_speed * self.rotation_scale
+                # X movement: primary rolling
+                ang_x = mov.dir_x * mov.h_speed * self.rotation_scale
+                # Y movement: secondary tumbling
+                ang_y = mov.dir_y * mov.h_speed * self.rotation_scale * 0.5
+                # Z movement: bounce/spin from vertical motion
+                ang_z = mov.v_speed * self.rotation_scale * 0.3
+                ang_vel = ang_x + ang_y + ang_z
                 self._rotation_angle += ang_vel * dt
                 self._rotation_angle %= 2 * math.pi
 

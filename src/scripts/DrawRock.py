@@ -3,6 +3,7 @@ import math
 import random
 from pygaminal.screen import Screen
 from pygaminal.app import App
+from pygaminal.input_manager import InputManager
 
 
 class DrawRock:
@@ -115,6 +116,11 @@ class DrawRock:
             all_colors.append(layer_colors)
         return all_colors
 
+    def _regenerate(self):
+        """Rebuild vertices and triangle colors after roughness change."""
+        self._base_vertices = self._generate_shape()
+        self._triangle_colors = self._compute_triangle_colors()
+
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
         return cam_comps[0] if cam_comps else None
@@ -141,6 +147,36 @@ class DrawRock:
                 ang_vel = ang_x + ang_y + ang_z
                 self._rotation_angle += ang_vel * dt
                 self._rotation_angle %= 2 * math.pi
+
+        # --- Temporary: roughness slider interaction ---
+        inp = InputManager()
+        mx, my = inp.get_mouse_x(), inp.get_mouse_y()
+        scr_h = Screen().height
+
+        slider_x = 10
+        slider_y = scr_h - 25
+        slider_w = 150
+
+        if inp.is_mouse_pressed(1):
+            if slider_y - 12 <= my <= slider_y + 12 and slider_x - 5 <= mx <= slider_x + slider_w + 5:
+                new_val = max(0.0, min(1.0, (mx - slider_x) / slider_w))
+                new_val = round(new_val * 100) / 100
+                if abs(new_val - self.roughness) > 0.005:
+                    self.roughness = new_val
+                    self._regenerate()
+
+        # Keyboard control: K and L keys adjust roughness
+        inp2 = InputManager()
+        if inp2.is_just_pressed(pygame.K_k):
+            self.roughness = max(0.0, self.roughness - 0.05)
+            self._regenerate()
+        if inp2.is_just_pressed(pygame.K_l):
+            self.roughness = min(1.0, self.roughness + 0.05)
+            self._regenerate()
+
+        # Share current roughness with overlay
+        import scripts.DrawRock as dr
+        dr.slider_roughness = self.roughness
 
     def draw(self, obj):
         surface = Screen().surface

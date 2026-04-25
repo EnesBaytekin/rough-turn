@@ -30,6 +30,10 @@ class DrawRock:
         # Accumulated visual rotation angle (radians)
         self._rotation_angle = 0.0
 
+        # Z rotation direction — random per launch
+        self._z_rot_dir = 1
+        self._was_moving = False
+
         # Pre-compute derived colors
         self._dark_color = pygame.Color(
             max(0, self.color.r - 50),
@@ -119,14 +123,21 @@ class DrawRock:
         mov_comps = obj.get_components("scripts/Fake3DMovement")
         if mov_comps:
             mov = mov_comps[0]
+
+            # New launch: pick random Z rotation direction
+            if mov.moving and not self._was_moving:
+                self._z_rot_dir = 1 if random.random() < 0.5 else -1
+
+            self._was_moving = mov.moving
+
             if mov.moving:
                 dt = App().dt
                 # X movement: primary rolling
                 ang_x = mov.dir_x * mov.h_speed * self.rotation_scale
                 # Y movement: secondary tumbling
                 ang_y = mov.dir_y * mov.h_speed * self.rotation_scale * 0.8
-                # Z movement: constant rotation while in the air, independent of v_speed
-                ang_z = self.rotation_scale * 120 if mov.z > 0 else 0
+                # Z movement: constant rotation while in air, random direction per launch
+                ang_z = self.rotation_scale * 120 * self._z_rot_dir if mov.z > 0 else 0
                 ang_vel = ang_x + ang_y + ang_z
                 self._rotation_angle += ang_vel * dt
                 self._rotation_angle %= 2 * math.pi

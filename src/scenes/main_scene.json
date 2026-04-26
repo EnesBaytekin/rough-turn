@@ -12,7 +12,7 @@
             "components": [
                 {
                     "file": "scripts/DrawBackground",
-                    "args": [500, 800, -45, 400, 32]
+                    "args": [500, 800, -45, 800, 32]
                 }
             ]
         },

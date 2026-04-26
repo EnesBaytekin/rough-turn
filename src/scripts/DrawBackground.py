@@ -75,12 +75,12 @@ class DrawBackground:
             return
 
         w, h = Screen().width, Screen().height
-        coast_len = max(w, h) * 3
+        coast_len = max(w, h) * 10
         off_x = int(-cam.x) % self.tile_size
         off_y = int(-cam.y) % self.tile_size
 
-        # Draw one big sand zone from coast (0) into land (sand_width)
-        strip_pts = self._make_strip_poly(cam, 0, self.sand_width, coast_len)
+        # Draw sand covering both sides of coast so no black shows through
+        strip_pts = self._make_strip_poly(cam, -self.sand_width, self.sand_width, coast_len)
 
         zone_surf = pygame.Surface((w, h))
         zone_surf.fill((200, 170, 120))

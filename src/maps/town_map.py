@@ -42,7 +42,7 @@ DEST_ZONE = (410, 340, 530, 405)
 DEPOSIT_CENTER = (475, 373)
 
 # Respawn point after depositing a smooth rock
-RESPAWN_POINT = (280, 650)
+RESPAWN_POINT = (155, 775)
 
 # Decorative rough rocks in the starting area — can intermingle with walls
 import random

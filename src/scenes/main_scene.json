@@ -31,8 +31,8 @@
         },
         {
             "name": "rock",
-            "x": 280,
-            "y": 650,
+            "x": 155,
+            "y": 775,
             "depth": 0,
             "tags": ["rock"],
             "components": [

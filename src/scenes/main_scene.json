@@ -37,6 +37,10 @@
             "tags": ["rock"],
             "components": [
                 {
+                    "file": "scripts/EnvironmentParticles",
+                    "args": [500, 800, -45]
+                },
+                {
                     "file": "scripts/Fake3DMovement",
                     "args": [300, 300, 60, 60, 600, 50, 275]
                 },

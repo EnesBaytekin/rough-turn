@@ -61,6 +61,15 @@ class DrawOverlay:
             pygame.draw.rect(surface, (255, 255, 255, alpha), border_rect,
                              width=thickness, border_radius=2)
 
+    def _draw_deposit_arrow(self, surface):
+        """Draw edge arrow pointing toward deposit center if off-screen."""
+        import scripts.DecorativeRocks as dr_mod
+        if dr_mod.arrow_visible and dr_mod.arrow_tip is not None:
+            pygame.draw.polygon(
+                surface, (255, 255, 255, 180),
+                [dr_mod.arrow_tip, dr_mod.arrow_left, dr_mod.arrow_right]
+            )
+
     def draw(self, obj):
         surface = Screen().surface
         w, h = Screen().width, Screen().height
@@ -89,6 +98,9 @@ class DrawOverlay:
             flash_surf = pygame.Surface((w, h), pygame.SRCALPHA)
             flash_surf.fill((255, 255, 255, alpha))
             surface.blit(flash_surf, (0, 0))
+
+        # Deposit edge arrow (on top of everything)
+        self._draw_deposit_arrow(surface)
 
     def update(self, obj):
         import scripts.DrawOverlay as dover

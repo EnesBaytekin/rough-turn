@@ -9,6 +9,12 @@ import random
 source_area = None
 dest_area = None
 
+# Arrow data — set by DecorativeRocks.draw(), drawn by DrawOverlay (depth 9999)
+arrow_visible = False
+arrow_tip = None
+arrow_left = None
+arrow_right = None
+
 
 class DecorativeRocks:
     def __init__(self, positions, roughness=0.6, radius=12, color_hex="#646464",
@@ -139,6 +145,9 @@ class DecorativeRocks:
             surface.blit(surf, (sx, sy))
 
         # --- Deposit indicator (dest area only, visible only when bar is full) ---
+        import scripts.DecorativeRocks as dr_mod
+        dr_mod.arrow_visible = False  # reset each frame
+
         if self.deposit_center is None:
             return
         import scripts.DrawRock as drawrock
@@ -174,6 +183,7 @@ class DecorativeRocks:
                                 progress_rect, 0, end_angle, width=4)
         else:
             # --- Edge arrow pointing toward deposit center ---
+            # Store in module vars so DrawOverlay (depth 9999) can draw it
             hw, hh = w // 2, h // 2
             dx_dir = sx - hw
             dy_dir = sy - hh
@@ -194,13 +204,12 @@ class DecorativeRocks:
 
             angle = math.atan2(dy_dir, dx_dir)
             arrow_len = 14
-            arrow_width = 7
-            tip = (ax, ay)
-            left = (ax - arrow_len * math.cos(angle - 0.6),
-                    ay - arrow_len * math.sin(angle - 0.6))
-            right = (ax - arrow_len * math.cos(angle + 0.6),
-                     ay - arrow_len * math.sin(angle + 0.6))
-            pygame.draw.polygon(surface, (255, 255, 255, 180), [tip, left, right])
+            dr_mod.arrow_visible = True
+            dr_mod.arrow_tip = (ax, ay)
+            dr_mod.arrow_left = (ax - arrow_len * math.cos(angle - 0.6),
+                                 ay - arrow_len * math.sin(angle - 0.6))
+            dr_mod.arrow_right = (ax - arrow_len * math.cos(angle + 0.6),
+                                  ay - arrow_len * math.sin(angle + 0.6))
 
     def update(self, obj):
         obj.depth = -1

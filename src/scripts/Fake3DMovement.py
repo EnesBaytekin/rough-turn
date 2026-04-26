@@ -291,9 +291,16 @@ class Fake3DMovement:
         self.h_speed = 0
         self.v_speed = 0
         self.z = 0
+
+        # Also reset the DrawRock component's roughness directly
+        rock_comps = obj.get_components("scripts/DrawRock")
+        if rock_comps:
+            rock_comps[0].roughness = 0.6
+            rock_comps[0]._regenerate()
         drawrock.slider_roughness = 0.6
         drawrock.deposit_progress = 0.0
         self._deposit_cooldown = 3.0
+        self._collision_cooldown = 0.0  # Reset so first collision works
 
         # Visual flash
         import scripts.DrawOverlay as dover

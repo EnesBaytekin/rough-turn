@@ -37,9 +37,9 @@ SPRITES = [
 # Source: bottom-left area — rough rocks scattered here (further down)
 SOURCE_ZONE = (30, 600, 280, 750)
 # Destination: top-right, compact — smooth spheres go here (further right)
-DEST_ZONE = (380, 340, 490, 405)
+DEST_ZONE = (410, 340, 530, 405)
 # Center point for the deposit indicator circle
-DEPOSIT_CENTER = (435, 373)
+DEPOSIT_CENTER = (475, 373)
 
 # Respawn point after depositing a smooth rock
 RESPAWN_POINT = (280, 650)
@@ -56,6 +56,6 @@ while len(SOURCE_ROCKS) < 30:
 # Decorative smooth spheres in the destination area (compact top-right)
 DEST_ROCKS = []
 while len(DEST_ROCKS) < 8:
-    x = _random.uniform(395, 475)
+    x = _random.uniform(425, 510)
     y = _random.uniform(355, 390)
     DEST_ROCKS.append((x, y))

@@ -138,30 +138,69 @@ class DecorativeRocks:
             sy = int(sy - half)
             surface.blit(surf, (sx, sy))
 
-        # --- Deposit indicator (dest area only) ---
+        # --- Deposit indicator (dest area only, visible only when bar is full) ---
         if self.deposit_center is None:
             return
         import scripts.DrawRock as drawrock
+        roughness = getattr(drawrock, 'slider_roughness', 1.0)
+        if roughness is not None and roughness > 0.001:
+            return
         progress = getattr(drawrock, 'deposit_progress', 0.0)
 
         dx, dy = self.deposit_center
-        cx, cy = cam.world_to_screen(dx, dy)
-        cx, cy = int(cx), int(cy)
-        radius = 40
+        sx, sy = cam.world_to_screen(dx, dy)
+        w, h = Screen().width, Screen().height
 
-        # Faint guide circle
-        guide_rect = pygame.Rect(cx - radius, cy - radius, radius * 2, radius * 2)
-        pygame.draw.arc(surface, (255, 255, 255, 50), guide_rect, 0, 2 * math.pi, width=1)
+        # On-screen check (with padding for the circle)
+        on_screen = (-20 < sx < w + 20 and -20 < sy < h + 20)
 
-        # Progress arc (fills during countdown)
-        if progress > 0:
-            end_angle = 2 * math.pi * progress
-            # Thicker, brighter arc for progress
-            alpha = int(120 + progress * 135)
-            progress_rect = pygame.Rect(cx - radius - 2, cy - radius - 2,
-                                        radius * 2 + 4, radius * 2 + 4)
-            pygame.draw.arc(surface, (255, 255, 255, min(255, alpha)),
-                            progress_rect, 0, end_angle, width=4)
+        if on_screen:
+            cx, cy = int(sx), int(sy)
+            radius = 40
+
+            # Faint guide circle
+            guide_rect = pygame.Rect(cx - radius, cy - radius,
+                                     radius * 2, radius * 2)
+            pygame.draw.arc(surface, (255, 255, 255, 50),
+                            guide_rect, 0, 2 * math.pi, width=1)
+
+            # Progress arc (fills during countdown)
+            if progress > 0:
+                end_angle = 2 * math.pi * progress
+                alpha = int(120 + progress * 135)
+                progress_rect = pygame.Rect(cx - radius - 2, cy - radius - 2,
+                                            radius * 2 + 4, radius * 2 + 4)
+                pygame.draw.arc(surface, (255, 255, 255, min(255, alpha)),
+                                progress_rect, 0, end_angle, width=4)
+        else:
+            # --- Edge arrow pointing toward deposit center ---
+            hw, hh = w // 2, h // 2
+            dx_dir = sx - hw
+            dy_dir = sy - hh
+            dist = (dx_dir * dx_dir + dy_dir * dy_dir) ** 0.5
+            if dist == 0:
+                return
+            dx_dir /= dist
+            dy_dir /= dist
+
+            margin = 24
+            max_w = hw - margin
+            max_h = hh - margin
+            tx = max_w / abs(dx_dir) if dx_dir != 0 else float('inf')
+            ty = max_h / abs(dy_dir) if dy_dir != 0 else float('inf')
+            t = min(tx, ty)
+            ax = int(hw + dx_dir * t)
+            ay = int(hh + dy_dir * t)
+
+            angle = math.atan2(dy_dir, dx_dir)
+            arrow_len = 14
+            arrow_width = 7
+            tip = (ax, ay)
+            left = (ax - arrow_len * math.cos(angle - 0.6),
+                    ay - arrow_len * math.sin(angle - 0.6))
+            right = (ax - arrow_len * math.cos(angle + 0.6),
+                     ay - arrow_len * math.sin(angle + 0.6))
+            pygame.draw.polygon(surface, (255, 255, 255, 180), [tip, left, right])
 
     def update(self, obj):
         obj.depth = -1

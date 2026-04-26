@@ -14,8 +14,10 @@ class DrawOverlay:
             for x in range(w):
                 dx = (x / w - 0.5) * 2
                 dy = (y / h - 0.5) * 2
-                dist = min(1.0, (dx * dx + dy * dy) * 1.5)
-                alpha = int(dist * 100)
+                dsq = dx * dx + dy * dy  # 0 at center, 2 at corners
+                t = min(1.0, dsq / 2.0)  # 0→1 normalized
+                # Quadratic falloff — smooth but visible near edges
+                alpha = int(t * 150)
                 surf.set_at((x, y), (0, 0, 0, alpha))
         return surf
 

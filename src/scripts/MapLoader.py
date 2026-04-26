@@ -17,7 +17,7 @@ class MapLoader:
         if not scene:
             return
 
-        from maps.town_map import WALLS, SPRITES
+        from maps.town_map import WALLS, SPRITES, SOURCE_ROCKS, DEST_ROCKS, SOURCE_ZONE, DEST_ZONE, RESPAWN_POINT
 
         for i, (x, y, w, t, a, c, h) in enumerate(WALLS):
             wall_obj = Object(x, y, name=f"wall_{i}", tags={"wall"}, depth=-1)
@@ -42,6 +42,28 @@ class MapLoader:
                 "scripts/Wall", (sw, st, sa, "#00000000", sh)
             ))
             scene.add_object(wall_obj)
+
+        # --- Decorative rock areas ---
+        import scripts.DecorativeRocks as dr
+
+        src_obj = Object(0, 0, name="decorative_rocks_source", depth=-1)
+        src_obj.add_component(ScriptComponent(
+            "scripts/DecorativeRocks", (SOURCE_ROCKS, 0.6, 12, "#646464")
+        ))
+        scene.add_object(src_obj)
+        dr.source_area = src_obj.get_components("scripts/DecorativeRocks")[0]
+
+        dest_obj = Object(0, 0, name="decorative_rocks_dest", depth=-1)
+        dest_obj.add_component(ScriptComponent(
+            "scripts/DecorativeRocks", (DEST_ROCKS, 0.0, 12, "#646464")
+        ))
+        scene.add_object(dest_obj)
+        dr.dest_area = dest_obj.get_components("scripts/DecorativeRocks")[0]
+
+        # Store zone info for Fake3DMovement to use
+        dr._source_zone = SOURCE_ZONE
+        dr._dest_zone = DEST_ZONE
+        dr._respawn_point = RESPAWN_POINT
 
     def draw(self, obj):
         pass

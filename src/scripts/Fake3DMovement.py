@@ -31,6 +31,8 @@ class Fake3DMovement:
         # Collision debris particles
         self._collision_particles = []
         self._collision_cooldown = 0.0
+        # Deposit mechanic
+        self._deposit_cooldown = 0.0
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -77,9 +79,11 @@ class Fake3DMovement:
         inp = InputManager()
         dt = App().dt
 
-        # Update collision cooldown
+        # Update cooldowns
         if self._collision_cooldown > 0:
             self._collision_cooldown -= dt
+        if self._deposit_cooldown > 0:
+            self._deposit_cooldown -= dt
 
         if self.moving:
             drag = self.air_friction if self.z > 0 else self.friction
@@ -147,6 +151,9 @@ class Fake3DMovement:
                         self.moving = True
 
                 self._aim_start_sx = None
+
+        # --- Zone check: deposit smooth rock in destination area ---
+        self._check_deposit_zone(obj)
 
         self._compute_depth(obj)
 
@@ -219,7 +226,6 @@ class Fake3DMovement:
             vx = self.h_speed * self.dir_x
             vy = self.h_speed * self.dir_y
             vdotn = vx * nx + vy * ny
-            print(f"[collision] dist={dist:.2f} min_dist={min_dist:.2f} vdotn={vdotn:.3f} h_speed={self.h_speed:.1f}")
             if vdotn < 0:
                 vx -= 2 * vdotn * nx
                 vy -= 2 * vdotn * ny
@@ -241,21 +247,14 @@ class Fake3DMovement:
                     self._collision_cooldown = 0.12
 
                     # Gradually smooth the rock on each collision
-                    print(f"[collision] vdotn={vdotn:.3f} cooldown={self._collision_cooldown:.3f}")
                     rock_comps = obj.get_components("scripts/DrawRock")
                     if rock_comps:
                         rock = rock_comps[0]
-                        print(f"[collision] rock.roughness BEFORE={rock.roughness:.4f}")
                         if rock.roughness > 0:
                             rock.roughness = max(0.0, rock.roughness - 0.015)
                             rock._regenerate()
                             import scripts.DrawRock as dr
                             dr.slider_roughness = rock.roughness
-                            print(f"[collision] roughness AFTER={rock.roughness:.4f}")
-                        else:
-                            print(f"[collision] roughness already 0")
-                    else:
-                        print(f"[collision] NO DrawRock component found")
 
         obj.x, obj.y = bx, by
 
@@ -272,6 +271,37 @@ class Fake3DMovement:
                 p["vy"] *= 0.9
             p["life"] -= dt
         self._collision_particles = [p for p in self._collision_particles if p["life"] > 0]
+
+    def _check_deposit_zone(self, obj):
+        if self._deposit_cooldown > 0:
+            return
+        import scripts.DecorativeRocks as dr
+        import scripts.DrawRock as drawrock
+        x1, y1, x2, y2 = getattr(dr, '_dest_zone', (0, 0, 0, 0))
+        if not (x1 <= obj.x <= x2 and y1 <= obj.y <= y2):
+            return
+        roughness = getattr(drawrock, 'slider_roughness', 1.0)
+        if roughness is None or roughness > 0.001:
+            return
+
+        # --- Deposit! ---
+        # Add a perfect sphere to the destination area
+        dest = getattr(dr, 'dest_area', None)
+        if dest is not None:
+            dest.add_rock(obj.x, obj.y)
+
+        # Reset player
+        obj.x, obj.y = getattr(dr, '_respawn_point', (280, 650))
+        self.moving = False
+        self.h_speed = 0
+        self.v_speed = 0
+        self.z = 0
+        drawrock.slider_roughness = 0.6
+        self._deposit_cooldown = 2.0
+
+        # Visual flash
+        import scripts.DrawOverlay as dover
+        dover.deposit_flash = 1.0
 
     def _draw_particles(self, obj):
         if not self._collision_particles:

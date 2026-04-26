@@ -31,3 +31,29 @@ WALLS = [
 SPRITES = [
     ("bucket.png", 0, 650, 80, 50, 0, 80, 155),
 ]
+
+# --- Decorative Rock Zones ---
+# Zone boundaries: (x1, y1, x2, y2)
+# Source: bottom-left area — rough rocks scattered here (further down)
+SOURCE_ZONE = (30, 600, 280, 750)
+# Destination: top-right, compact — smooth spheres go here (further right)
+DEST_ZONE = (290, 350, 380, 395)
+
+# Respawn point after depositing a smooth rock
+RESPAWN_POINT = (280, 650)
+
+# Decorative rough rocks in the starting area — can intermingle with walls
+import random
+_random = random.Random(123)
+SOURCE_ROCKS = []
+while len(SOURCE_ROCKS) < 30:
+    x = _random.uniform(40, 270)
+    y = _random.uniform(710, 840)
+    SOURCE_ROCKS.append((x, y))
+
+# Decorative smooth spheres in the destination area (compact top-right)
+DEST_ROCKS = []
+while len(DEST_ROCKS) < 8:
+    x = _random.uniform(395, 475)
+    y = _random.uniform(355, 390)
+    DEST_ROCKS.append((x, y))

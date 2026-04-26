@@ -3,6 +3,9 @@ from pygaminal.app import App
 from pygaminal.screen import Screen
 from scripts.DrawAim import _get_overlay
 
+# Deposit flash — set by Fake3DMovement, read here
+deposit_flash = 0.0
+
 
 class DrawOverlay:
     def __init__(self):
@@ -70,5 +73,15 @@ class DrawOverlay:
         # Roughness bar
         self._draw_roughness_bar(surface, w, h)
 
+        # Deposit flash overlay
+        if deposit_flash > 0:
+            alpha = min(255, int(deposit_flash * 200))
+            flash_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+            flash_surf.fill((255, 255, 255, alpha))
+            surface.blit(flash_surf, (0, 0))
+
     def update(self, obj):
+        import scripts.DrawOverlay as dover
+        if dover.deposit_flash > 0:
+            dover.deposit_flash = max(0.0, dover.deposit_flash - App().dt * 2.0)
         obj.depth = 9999

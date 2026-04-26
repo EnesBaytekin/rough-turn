@@ -33,6 +33,7 @@ class Fake3DMovement:
         self._collision_cooldown = 0.0
         # Deposit mechanic
         self._deposit_cooldown = 0.0
+        self._deposit_timer = None
 
     def _get_cam(self, obj):
         cam_comps = obj.get_components("scripts/Camera")
@@ -272,36 +273,59 @@ class Fake3DMovement:
             p["life"] -= dt
         self._collision_particles = [p for p in self._collision_particles if p["life"] > 0]
 
-    def _check_deposit_zone(self, obj):
-        if self._deposit_cooldown > 0:
-            return
+    def _do_deposit(self, obj):
+        """Add sphere to dest, teleport to random source point, reset roughness."""
         import scripts.DecorativeRocks as dr
         import scripts.DrawRock as drawrock
-        x1, y1, x2, y2 = getattr(dr, '_dest_zone', (0, 0, 0, 0))
-        if not (x1 <= obj.x <= x2 and y1 <= obj.y <= y2):
-            return
-        roughness = getattr(drawrock, 'slider_roughness', 1.0)
-        if roughness is None or roughness > 0.001:
-            return
 
-        # --- Deposit! ---
-        # Add a perfect sphere to the destination area
+        # Leave a perfect sphere at deposit position
         dest = getattr(dr, 'dest_area', None)
         if dest is not None:
             dest.add_rock(obj.x, obj.y)
 
-        # Reset player
-        obj.x, obj.y = getattr(dr, '_respawn_point', (280, 650))
+        # Random spawn within source zone
+        sx1, sy1, sx2, sy2 = getattr(dr, '_source_zone', (30, 600, 280, 750))
+        obj.x = random.uniform(sx1 + 10, sx2 - 10)
+        obj.y = random.uniform(sy1 + 10, sy2 - 10)
         self.moving = False
         self.h_speed = 0
         self.v_speed = 0
         self.z = 0
         drawrock.slider_roughness = 0.6
-        self._deposit_cooldown = 2.0
+        drawrock.deposit_progress = 0.0
+        self._deposit_cooldown = 3.0
 
         # Visual flash
         import scripts.DrawOverlay as dover
         dover.deposit_flash = 1.0
+
+    def _check_deposit_zone(self, obj):
+        dt = App().dt
+        if self._deposit_cooldown > 0:
+            self._deposit_timer = None
+            import scripts.DrawRock as drawrock
+            drawrock.deposit_progress = 0.0
+            return
+
+        import scripts.DecorativeRocks as dr
+        import scripts.DrawRock as drawrock
+
+        x1, y1, x2, y2 = getattr(dr, '_dest_zone', (0, 0, 0, 0))
+        in_zone = (x1 <= obj.x <= x2 and y1 <= obj.y <= y2)
+        roughness = getattr(drawrock, 'slider_roughness', 1.0)
+        smooth = (roughness is not None and roughness <= 0.001)
+
+        if in_zone and smooth:
+            if self._deposit_timer is None:
+                self._deposit_timer = 3.0
+            self._deposit_timer -= dt
+            drawrock.deposit_progress = max(0.0, 1.0 - self._deposit_timer / 3.0)
+
+            if self._deposit_timer <= 0:
+                self._do_deposit(obj)
+        else:
+            self._deposit_timer = None
+            drawrock.deposit_progress = 0.0
 
     def _draw_particles(self, obj):
         if not self._collision_particles:

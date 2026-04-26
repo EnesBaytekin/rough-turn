@@ -11,11 +11,13 @@ dest_area = None
 
 
 class DecorativeRocks:
-    def __init__(self, positions, roughness=0.6, radius=12, color_hex="#646464"):
+    def __init__(self, positions, roughness=0.6, radius=12, color_hex="#646464",
+                 deposit_center=None):
         self.positions = list(positions)
         self.roughness = roughness
         self.radius = radius
         self.color = pygame.Color(color_hex)
+        self.deposit_center = deposit_center  # (world_x, world_y) or None
         # List of (surface, half_size) — one per position, each with a random rotation
         self._rock_caches = []
         self._rebuild_caches()
@@ -135,6 +137,31 @@ class DecorativeRocks:
             sx = int(sx - half)
             sy = int(sy - half)
             surface.blit(surf, (sx, sy))
+
+        # --- Deposit indicator (dest area only) ---
+        if self.deposit_center is None:
+            return
+        import scripts.DrawRock as drawrock
+        progress = getattr(drawrock, 'deposit_progress', 0.0)
+
+        dx, dy = self.deposit_center
+        cx, cy = cam.world_to_screen(dx, dy)
+        cx, cy = int(cx), int(cy)
+        radius = 40
+
+        # Faint guide circle
+        guide_rect = pygame.Rect(cx - radius, cy - radius, radius * 2, radius * 2)
+        pygame.draw.arc(surface, (255, 255, 255, 50), guide_rect, 0, 2 * math.pi, width=1)
+
+        # Progress arc (fills during countdown)
+        if progress > 0:
+            end_angle = 2 * math.pi * progress
+            # Thicker, brighter arc for progress
+            alpha = int(120 + progress * 135)
+            progress_rect = pygame.Rect(cx - radius - 2, cy - radius - 2,
+                                        radius * 2 + 4, radius * 2 + 4)
+            pygame.draw.arc(surface, (255, 255, 255, min(255, alpha)),
+                            progress_rect, 0, end_angle, width=4)
 
     def update(self, obj):
         obj.depth = -1

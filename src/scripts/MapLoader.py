@@ -17,7 +17,7 @@ class MapLoader:
         if not scene:
             return
 
-        from maps.town_map import WALLS, SPRITES, SOURCE_ROCKS, DEST_ROCKS, SOURCE_ZONE, DEST_ZONE, RESPAWN_POINT
+        from maps.town_map import WALLS, SPRITES, SOURCE_ROCKS, DEST_ROCKS, SOURCE_ZONE, DEST_ZONE, RESPAWN_POINT, DEPOSIT_CENTER
 
         for i, (x, y, w, t, a, c, h) in enumerate(WALLS):
             wall_obj = Object(x, y, name=f"wall_{i}", tags={"wall"}, depth=-1)
@@ -55,7 +55,7 @@ class MapLoader:
 
         dest_obj = Object(0, 0, name="decorative_rocks_dest", depth=-1)
         dest_obj.add_component(ScriptComponent(
-            "scripts/DecorativeRocks", (DEST_ROCKS, 0.0, 12, "#646464")
+            "scripts/DecorativeRocks", (DEST_ROCKS, 0.0, 12, "#646464", DEPOSIT_CENTER)
         ))
         scene.add_object(dest_obj)
         dr.dest_area = dest_obj.get_components("scripts/DecorativeRocks")[0]

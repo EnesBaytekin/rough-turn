@@ -51,6 +51,16 @@ class DrawOverlay:
             fill_rect = pygame.Rect(bar_x, bar_y, fill_w, bar_h)
             pygame.draw.rect(surface, (220, 170, 90), fill_rect, border_radius=2)
 
+        # White border highlight when bar is full
+        if fill >= 1.0:
+            import scripts.DrawRock
+            progress = getattr(scripts.DrawRock, 'deposit_progress', 0.0)
+            thickness = 1 + int(progress * 2)  # pulses 1→3 during countdown
+            alpha = min(255, 160 + int(progress * 95))
+            border_rect = pygame.Rect(bar_x - 1, bar_y - 1, bar_w + 2, bar_h + 2)
+            pygame.draw.rect(surface, (255, 255, 255, alpha), border_rect,
+                             width=thickness, border_radius=2)
+
     def draw(self, obj):
         surface = Screen().surface
         w, h = Screen().width, Screen().height

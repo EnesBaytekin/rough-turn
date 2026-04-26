@@ -37,7 +37,9 @@ SPRITES = [
 # Source: bottom-left area — rough rocks scattered here (further down)
 SOURCE_ZONE = (30, 600, 280, 750)
 # Destination: top-right, compact — smooth spheres go here (further right)
-DEST_ZONE = (290, 350, 380, 395)
+DEST_ZONE = (380, 340, 490, 405)
+# Center point for the deposit indicator circle
+DEPOSIT_CENTER = (435, 373)
 
 # Respawn point after depositing a smooth rock
 RESPAWN_POINT = (280, 650)

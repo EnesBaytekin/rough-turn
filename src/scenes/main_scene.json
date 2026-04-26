@@ -1,7 +1,7 @@
 {
     "width": 320,
     "height": 180,
-    "background_color": "#668792",
+    "background_color": "#2D1B4E",
     "objects": [
         {
             "name": "bg",
@@ -12,14 +12,27 @@
             "components": [
                 {
                     "file": "scripts/DrawBackground",
-                    "args": [32]
+                    "args": [500, 800, -45, 400, 32]
+                }
+            ]
+        },
+        {
+            "name": "water",
+            "x": 0,
+            "y": 0,
+            "depth": -2,
+            "tags": [],
+            "components": [
+                {
+                    "file": "scripts/WaterEffect",
+                    "args": [500, 800, -45, 1500]
                 }
             ]
         },
         {
             "name": "rock",
-            "x": 160,
-            "y": 90,
+            "x": 280,
+            "y": 650,
             "depth": 0,
             "tags": ["rock"],
             "components": [
@@ -44,54 +57,54 @@
             ]
         },
         {
-            "name": "wall_bottom",
-            "x": 160,
-            "y": 170,
-            "depth": -1,
-            "tags": ["wall"],
+            "name": "sunbeams",
+            "x": 0,
+            "y": 0,
+            "depth": 9000,
+            "tags": [],
             "components": [
                 {
-                    "file": "scripts/Wall",
-                    "args": [200, 10, 0, "#887a6e", 40]
+                    "file": "scripts/Sunbeams",
+                    "args": [-200, -100, 4]
                 }
             ]
         },
         {
-            "name": "wall_left",
-            "x": 20,
-            "y": 90,
-            "depth": -1,
-            "tags": ["wall"],
+            "name": "drizzles",
+            "x": 0,
+            "y": 0,
+            "depth": 9001,
+            "tags": [],
             "components": [
                 {
-                    "file": "scripts/Wall",
-                    "args": [140, 10, 90, "#887a6e", 50]
+                    "file": "scripts/Drizzles",
+                    "args": [40, 20, 250]
                 }
             ]
         },
         {
-            "name": "wall_right",
-            "x": 300,
-            "y": 90,
-            "depth": -1,
-            "tags": ["wall"],
+            "name": "ambient_particles",
+            "x": 0,
+            "y": 0,
+            "depth": 9002,
+            "tags": [],
             "components": [
                 {
-                    "file": "scripts/Wall",
-                    "args": [140, 10, 90, "#887a6e", 50]
+                    "file": "scripts/AmbientParticles",
+                    "args": ["dust", 40, 0, 0, 320, 180, 0.03]
                 }
             ]
         },
         {
-            "name": "wall_angled",
-            "x": 200,
-            "y": 50,
-            "depth": -1,
-            "tags": ["wall"],
+            "name": "fireflies",
+            "x": 0,
+            "y": 0,
+            "depth": 9002,
+            "tags": [],
             "components": [
                 {
-                    "file": "scripts/Wall",
-                    "args": [100, 10, -30, "#887a6e", 30]
+                    "file": "scripts/AmbientParticles",
+                    "args": ["firefly", 15, 100, 400, 500, 300, 0.015]
                 }
             ]
         },

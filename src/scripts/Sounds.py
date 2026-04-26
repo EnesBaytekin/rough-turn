@@ -51,6 +51,6 @@ def start_music():
     from pygaminal.audio_manager import AudioManager
     path = os.path.join(_get_sound_dir(), "lofi.ogg")
     try:
-        AudioManager().play_music(path, loop=True)
+        AudioManager().play_music(path, loop=True, volume=0.5)
     except Exception:
         pass

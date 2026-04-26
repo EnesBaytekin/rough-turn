@@ -294,41 +294,49 @@ class Fake3DMovement:
             wall = wall_comps[0]
 
             a = radians(wall.angle)
-            # Wall normal (perpendicular to length direction)
-            nx = -sin(a)
-            ny = cos(a)
+            ca, sa = cos(a), sin(a)
+            # Perpendicular normal to wall length
+            nx = -sa
+            ny = ca
 
-            ht = wall.thickness / 2
-            wcx, wcy = wob.x, wob.y
-
-            # The wall has two long sides, offset by ±thickness/2 along the normal.
-            # In 2.5D the side with higher Y is "closer to screen".
-            # Pick the near side's center and measure ball relative to it.
-            near_side_y = wcy + ny * ht
-            far_side_y = wcy - ny * ht
-
-            if abs(near_side_y - far_side_y) < 0.001:
-                # Vertical wall – both sides same Y, y-sort is fine
+            if abs(ny) < 0.001:
+                # Vertical wall (parallel to Y) — Y-sort unaffected
                 continue
 
-            # near normal points from wall center toward the near (high-Y) side
-            if ny > 0:
-                nfx, nfy = nx, ny
+            hw = wall.width / 2
+            ht = wall.thickness / 2
+
+            # Wall center line segment
+            sx = wob.x - ca * hw
+            sy = wob.y - sa * hw
+            ex = wob.x + ca * hw
+            ey = wob.y + sa * hw
+
+            # Project rock onto segment to find closest point on center line
+            sdx = ex - sx
+            sdy = ey - sy
+            seg_len_2 = sdx * sdx + sdy * sdy
+
+            if seg_len_2 < 0.001:
+                proj_x, proj_y = sx, sy
             else:
-                nfx, nfy = -nx, -ny
+                t = ((bx - sx) * sdx + (by - sy) * sdy) / seg_len_2
+                t = max(0, min(1, t))
+                proj_x = sx + t * sdx
+                proj_y = sy + t * sdy
 
-            near_cx = wcx + nfx * ht
-            near_cy = wcy + nfy * ht
+            # Perpendicular distance from rock to center line at projected point
+            perp_dist = (bx - proj_x) * nx + (by - proj_y) * ny
 
-            # Signed distance from the near-side plane
-            ball_side = (bx - near_cx) * nfx + (by - near_cy) * nfy
+            # Clamp to wall surface and get surface Y
+            clamped_dist = max(-ht, min(ht, perp_dist))
+            surface_y = proj_y + clamped_dist * ny
 
-            if ball_side > 0:
-                # Ball is even closer to screen than the near side → in front
-                depth_val = max(depth_val, wcy + 1)
-            else:
-                # Ball is on the far side of the near plane → behind
-                depth_val = min(depth_val, wcy - 1)
+            # Compare rock Y to surface Y (higher Y = closer to screen)
+            if by > surface_y:
+                depth_val = max(depth_val, wob.y + 1)
+            elif by < surface_y:
+                depth_val = min(depth_val, wob.y - 1)
 
         obj.depth = depth_val
 

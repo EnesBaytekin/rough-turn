@@ -71,21 +71,24 @@ class EnvironmentParticles:
 
         elif not in_water and on_ground and speed > 15:
             self._sand_timer += dt
-            if self._sand_timer > 0.04 and len(self._sand_particles) < 30:
+            if self._sand_timer > 0.04 and len(self._sand_particles) < 40:
                 self._sand_timer = 0
-                angle = math.atan2(dy, dx)
-                for _ in range(random.randint(1, 2)):
-                    spread = random.uniform(-0.8, 0.8)
-                    p_angle = angle + math.pi + spread
-                    p_speed = random.uniform(15, 50)
+                for _ in range(random.randint(1, 3)):
+                    base = (200, 170, 120)
+                    offset = random.randint(-30, 40)
+                    cr = max(0, min(255, base[0] + offset))
+                    cg = max(0, min(255, base[1] + offset))
+                    cb = max(0, min(255, base[2] + offset))
                     self._sand_particles.append({
-                        "x": obj.x + random.uniform(-4, 4),
-                        "y": obj.y + random.uniform(-4, 4),
-                        "vx": math.cos(p_angle) * p_speed + random.uniform(-15, 15),
-                        "vy": math.sin(p_angle) * p_speed + random.uniform(-30, -10),
-                        "life": 0,
-                        "max_life": random.uniform(0.2, 0.6),
+                        "x": obj.x + random.uniform(-6, 6),
+                        "y": obj.y + random.uniform(-6, 6),
+                        "z": 0,
+                        "vz": random.uniform(8, 25),
+                        "state": "up",
+                        "rest_timer": 0,
+                        "rest_duration": random.uniform(0.15, 0.4),
                         "size": random.choice([1, 1, 2]),
+                        "cr": cr, "cg": cg, "cb": cb,
                     })
 
         # Update ripples
@@ -95,14 +98,23 @@ class EnvironmentParticles:
             if r["life"] >= r["max_life"]:
                 self._ripples.remove(r)
 
-        # Update sand particles
+        # Update sand particles — state machine: up → down → rest → done
         for p in self._sand_particles[:]:
-            p["life"] += dt
-            p["x"] += p["vx"] * dt
-            p["y"] += p["vy"] * dt
-            p["vy"] += 200 * dt  # gravity
-            if p["life"] >= p["max_life"]:
-                self._sand_particles.remove(p)
+            if p["state"] == "up":
+                p["z"] += p["vz"] * dt
+                p["vz"] -= 400 * dt  # gravity pulling down
+                if p["vz"] <= 0:
+                    p["state"] = "down"
+            elif p["state"] == "down":
+                p["z"] += p["vz"] * dt  # vz is negative, falling
+                if p["z"] <= 0:
+                    p["z"] = 0
+                    p["state"] = "rest"
+                    p["rest_timer"] = 0
+            elif p["state"] == "rest":
+                p["rest_timer"] += dt
+                if p["rest_timer"] >= p["rest_duration"]:
+                    self._sand_particles.remove(p)
 
     def draw(self, obj):
         surface = Screen().surface
@@ -131,11 +143,14 @@ class EnvironmentParticles:
         # Draw sand particles
         for p in self._sand_particles:
             sx, sy = cam.world_to_screen(p["x"], p["y"])
-            progress = p["life"] / p["max_life"]
-            alpha = int(200 * (1 - progress))
+            sy -= p["z"] * squash  # lift off ground squashed
             size = p["size"]
-            c = max(0, 200 - int(progress * 80))
-            sand_color = (c, max(0, c - 30), max(0, c - 60))
+            sand_color = (p["cr"], p["cg"], p["cb"])
+
+            # Fade out while resting on ground
+            alpha = 255
+            if p["state"] == "rest":
+                alpha = int(200 * (1 - p["rest_timer"] / p["rest_duration"]))
 
             psurf = pygame.Surface((size + 1, size + 1))
             psurf.set_colorkey((0, 0, 0))

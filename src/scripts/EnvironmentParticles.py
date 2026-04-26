@@ -61,6 +61,8 @@ class EnvironmentParticles:
             self._ripple_timer += dt
             if self._ripple_timer > 0.2 and len(self._ripples) < 15:
                 self._ripple_timer = 0
+                import scripts.Sounds as sounds
+                sounds.play_blub_sound()
                 self._ripples.append({
                     "x": obj.x, "y": obj.y,
                     "radius": 0,

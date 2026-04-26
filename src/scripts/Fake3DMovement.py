@@ -256,6 +256,8 @@ class Fake3DMovement:
                             rock._regenerate()
                             import scripts.DrawRock as dr
                             dr.slider_roughness = rock.roughness
+                            import scripts.Sounds as sounds
+                            sounds.play_stone_sound()
 
         obj.x, obj.y = bx, by
 

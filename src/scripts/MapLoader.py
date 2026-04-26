@@ -13,6 +13,11 @@ class MapLoader:
             return
         self._loaded = True
 
+        # Start background music and initialize sounds once
+        import scripts.Sounds as sounds
+        sounds.init_sounds()
+        sounds.start_music()
+
         scene = App().get_current_scene()
         if not scene:
             return

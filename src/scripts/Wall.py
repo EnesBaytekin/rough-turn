@@ -33,6 +33,8 @@ class Wall:
         return corners
 
     def draw(self, obj):
+        if self.color.a == 0:
+            return  # invisible wall (used with DrawSprite)
         surface = Screen().surface
         cam = self._get_cam(obj)
         sx, sy = cam.world_to_screen(obj.x, obj.y) if cam else (obj.x, obj.y)

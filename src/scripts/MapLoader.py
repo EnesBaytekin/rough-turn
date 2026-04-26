@@ -17,36 +17,31 @@ class MapLoader:
         if not scene:
             return
 
-        from maps.town_map import (
-            WALLS,
-            DECORATIONS,
-            DECOR_WALL_SIZES,
-            DECOR_WALL_COLORS,
-            DECOR_WALL_HEIGHTS,
-        )
+        from maps.town_map import WALLS, SPRITES
 
-        # Create wall objects
         for i, (x, y, w, t, a, c, h) in enumerate(WALLS):
             wall_obj = Object(x, y, name=f"wall_{i}", tags={"wall"}, depth=-1)
             wall_obj.add_component(ScriptComponent("scripts/Wall", (w, t, a, c, h)))
             scene.add_object(wall_obj)
 
-        # Create decoration objects (wall + decorative sprite)
-        for i, (typ, dx, dy, params) in enumerate(DECORATIONS):
-            wall_size = DECOR_WALL_SIZES.get(typ, (8, 4, 0))
-            wall_color = DECOR_WALL_COLORS.get(typ, "#8A7A6A")
-            wall_height = DECOR_WALL_HEIGHTS.get(typ, 15)
+        for i, sprite_data in enumerate(SPRITES):
+            img_path, sx, sy, sw, st, sa, sh = sprite_data[:7]
+            ground_from_top = sprite_data[7] if len(sprite_data) > 7 else 0
 
-            decor_obj = Object(dx, dy, name=f"{typ}_{i}", tags={"wall"}, depth=dy)
-            decor_obj.add_component(ScriptComponent(
-                "scripts/Wall",
-                (wall_size[0], wall_size[1], wall_size[2], wall_color, wall_height),
+            # Visible sprite at visual position
+            vis_obj = Object(sx, sy, name=f"sprite_{i}_vis", depth=sy)
+            vis_obj.add_component(ScriptComponent(
+                "scripts/DrawSprite", (img_path, 1.0, ground_from_top)
             ))
-            decor_obj.add_component(ScriptComponent(
-                "scripts/DecorativeSprite",
-                (typ, params),
+            scene.add_object(vis_obj)
+
+            # Invisible wall shifted up so its bottom aligns with sprite base
+            wall_y = sy - 28
+            wall_obj = Object(sx, wall_y, name=f"sprite_{i}_wall", tags={"wall"}, depth=wall_y)
+            wall_obj.add_component(ScriptComponent(
+                "scripts/Wall", (sw, st, sa, "#00000000", sh)
             ))
-            scene.add_object(decor_obj)
+            scene.add_object(wall_obj)
 
     def draw(self, obj):
         pass

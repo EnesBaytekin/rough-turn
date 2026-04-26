@@ -113,6 +113,18 @@
             ]
         },
         {
+            "name": "map_loader",
+            "x": 0,
+            "y": 0,
+            "depth": -1,
+            "tags": [],
+            "components": [
+                {
+                    "file": "scripts/MapLoader"
+                }
+            ]
+        },
+        {
             "name": "overlay",
             "x": 0,
             "y": 0,

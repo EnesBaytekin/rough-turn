@@ -219,6 +219,7 @@ class Fake3DMovement:
             vx = self.h_speed * self.dir_x
             vy = self.h_speed * self.dir_y
             vdotn = vx * nx + vy * ny
+            print(f"[collision] dist={dist:.2f} min_dist={min_dist:.2f} vdotn={vdotn:.3f} h_speed={self.h_speed:.1f}")
             if vdotn < 0:
                 vx -= 2 * vdotn * nx
                 vy -= 2 * vdotn * ny
@@ -240,12 +241,21 @@ class Fake3DMovement:
                     self._collision_cooldown = 0.12
 
                     # Gradually smooth the rock on each collision
+                    print(f"[collision] vdotn={vdotn:.3f} cooldown={self._collision_cooldown:.3f}")
                     rock_comps = obj.get_components("scripts/DrawRock")
                     if rock_comps:
                         rock = rock_comps[0]
+                        print(f"[collision] rock.roughness BEFORE={rock.roughness:.4f}")
                         if rock.roughness > 0:
                             rock.roughness = max(0.0, rock.roughness - 0.015)
                             rock._regenerate()
+                            import scripts.DrawRock as dr
+                            dr.slider_roughness = rock.roughness
+                            print(f"[collision] roughness AFTER={rock.roughness:.4f}")
+                        else:
+                            print(f"[collision] roughness already 0")
+                    else:
+                        print(f"[collision] NO DrawRock component found")
 
         obj.x, obj.y = bx, by
 

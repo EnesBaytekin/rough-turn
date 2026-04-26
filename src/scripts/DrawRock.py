@@ -132,6 +132,13 @@ class DrawRock:
         return cam_comps[0] if cam_comps else None
 
     def update(self, obj):
+        import scripts.DrawRock as dr
+        # Sync from external roughness changes (e.g., collision in Fake3DMovement)
+        ext_r = getattr(dr, 'slider_roughness', None)
+        if ext_r is not None and abs(ext_r - self.roughness) > 0.0001:
+            self.roughness = ext_r
+            self._regenerate()
+
         mov_comps = obj.get_components("scripts/Fake3DMovement")
         if mov_comps:
             mov = mov_comps[0]
@@ -166,7 +173,6 @@ class DrawRock:
             print(f"roughness: {self.roughness:.2f}")
 
         # Share current roughness with overlay
-        import scripts.DrawRock as dr
         dr.slider_roughness = self.roughness
 
     def draw(self, obj):

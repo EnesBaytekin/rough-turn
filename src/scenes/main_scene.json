@@ -46,7 +46,7 @@
                 },
                 {
                     "file": "scripts/DrawRock",
-                    "args": ["#646464", 12, true, 24, 0.7, 0.02, 0.003, 14, 7]
+                    "args": ["#646464", 12, true, 24, 0.6, 0.02, 0.003, 14, 7]
                 },
                 {
                     "file": "scripts/DrawAim"

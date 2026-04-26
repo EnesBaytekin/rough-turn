@@ -1,4 +1,5 @@
 import pygame
+from pygaminal.app import App
 from pygaminal.screen import Screen
 from scripts.DrawAim import _get_overlay
 
@@ -16,10 +17,36 @@ class DrawOverlay:
                 dy = (y / h - 0.5) * 2
                 dsq = dx * dx + dy * dy  # 0 at center, 2 at corners
                 t = min(1.0, dsq / 2.0)  # 0→1 normalized
-                # Quadratic falloff — smooth but visible near edges
                 alpha = int(t * 150)
                 surf.set_at((x, y), (0, 0, 0, alpha))
         return surf
+
+    def _get_roughness(self):
+        import scripts.DrawRock
+        return getattr(scripts.DrawRock, 'slider_roughness', None)
+
+    def _draw_roughness_bar(self, surface, w, h):
+        roughness = self._get_roughness()
+        if roughness is None:
+            return
+
+        # Fill ratio: 0 at roughness=0.6, 1 at roughness=0
+        fill = max(0.0, min(1.0, 1.0 - roughness / 0.6))
+
+        bar_w = int(w * 0.55)
+        bar_h = 3
+        bar_x = (w - bar_w) // 2
+        bar_y = h - 10
+
+        # Background (dark, subtle)
+        bg_rect = pygame.Rect(bar_x, bar_y, bar_w, bar_h)
+        pygame.draw.rect(surface, (40, 35, 30, 180), bg_rect, border_radius=2)
+
+        # Fill (warm golden, cozy)
+        if fill > 0:
+            fill_w = max(1, int(bar_w * fill))
+            fill_rect = pygame.Rect(bar_x, bar_y, fill_w, bar_h)
+            pygame.draw.rect(surface, (220, 170, 90), fill_rect, border_radius=2)
 
     def draw(self, obj):
         surface = Screen().surface
@@ -39,6 +66,9 @@ class DrawOverlay:
             self._warm_wash = pygame.Surface((w, h), pygame.SRCALPHA)
             self._warm_wash.fill((200, 150, 80, 15))
         surface.blit(self._warm_wash, (0, 0))
+
+        # Roughness bar
+        self._draw_roughness_bar(surface, w, h)
 
     def update(self, obj):
         obj.depth = 9999

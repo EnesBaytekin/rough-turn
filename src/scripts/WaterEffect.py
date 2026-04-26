@@ -154,4 +154,4 @@ class WaterEffect:
                 surface.blit(psurf, (int(sw), int(sh)))
 
     def update(self, obj):
-        obj.depth = -100
+        obj.depth = -99999

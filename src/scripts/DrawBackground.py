@@ -101,4 +101,4 @@ class DrawBackground:
         surface.blit(zone_surf, (0, 0))
 
     def update(self, obj):
-        obj.depth = -9999
+        obj.depth = -999999
